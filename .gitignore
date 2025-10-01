@@ -4,26 +4,10 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
-*.manifest
-*.spec
 pip-log.txt
 pip-delete-this-directory.txt
 .pytest_cache/
@@ -34,57 +18,63 @@ htmlcov/
 .nox/
 .hypothesis/
 .pytype/
+*.pyc
+*.pyo
 
 # Python virtual environments
 venv/
 env/
 ENV/
-env.bak/
-venv.bak/
+.venv/
 backend/venv/
 backend/env/
-.venv/
-.env/
 
 # Node.js / Next.js
 node_modules/
 .next/
 out/
 .cache/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-lerna-debug.log*
 .npm
 .eslintcache
 .node_repl_history
 *.tsbuildinfo
 next-env.d.ts
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env*.local
-*.env
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+logs/
+combined.log
+error.log
 
-# Backend environment
+# Environment variables (NEVER commit these!)
+# All .env files
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+
+# Specific paths
 backend/.env
 backend/.env.local
 backend/.env.development.local
 backend/.env.test.local
 backend/.env.production.local
-
-# Frontend environment
 frontend/.env
 frontend/.env.local
 frontend/.env.development.local
 frontend/.env.test.local
 frontend/.env.production.local
+
+# EXCEPT example files (these should be committed)
+!.env.example
+!**/.env.example
+!**/.env.*.example
 
 # IDE / Editor
 .vscode/
@@ -95,38 +85,14 @@ frontend/.env.production.local
 .DS_Store
 *.sublime-project
 *.sublime-workspace
-.project
-.settings/
-.classpath
-.c9/
-*.launch
-.settings/
-.metadata/
-.recommenders/
 
 # Claude Code
 .claude/
-
-# Logs
-logs/
-*.log
-combined.log
-error.log
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
-
-# Secrets & Credentials
-*.pem
-*.key
-*.cert
-*.crt
-secrets/
-credentials/
-*.credentials
-TEST_CREDENTIALS.md
 
 # OS
 .DS_Store
@@ -142,28 +108,12 @@ desktop.ini
 *.tmp
 *.temp
 *.bak
-*.swp
-*.swo
-.tmp/
-tmp/
-temp/
 
 # Test & Coverage
 coverage/
 .nyc_output/
-test-results/
-junit.xml
 
-# Data & Documents
+# Data & Documents (auto-generated)
 data/pdfs/
 data/downloads/
 *.pdf
-*.csv
-*.xlsx
-*.xls
-
-# Build artifacts
-dist/
-build/
-*.pyc
-*.pyo
