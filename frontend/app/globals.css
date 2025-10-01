@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  /* Baby-friendly pastel colors */
+  --color-baby-pink: #FFE5EC;
+  --color-baby-blue: #E0F4FF;
+  --color-baby-yellow: #FFF8DC;
+  --color-baby-purple: #F0E6FF;
+  --color-soft-peach: #FFE4D6;
+  --color-mint: #E0F9F5;
+
+  --color-background: oklch(100% 0 0);
+  --color-foreground: oklch(20% 0 0);
+  --color-card: oklch(100% 0 0);
+  --color-card-foreground: oklch(20% 0 0);
+  --color-popover: oklch(100% 0 0);
+  --color-popover-foreground: oklch(20% 0 0);
+  --color-primary: #FF9ECD;
+  --color-primary-foreground: oklch(100% 0 0);
+  --color-secondary: #B4E4FF;
+  --color-secondary-foreground: oklch(20% 0 0);
+  --color-muted: oklch(96.1% 0 0);
+  --color-muted-foreground: oklch(50% 0 0);
+  --color-accent: #FFD5E5;
+  --color-accent-foreground: oklch(20% 0 0);
+  --color-destructive: oklch(60.2% 0.16 29);
+  --color-destructive-foreground: oklch(98% 0 0);
+  --color-border: oklch(92% 0 0);
+  --color-input: oklch(98% 0 0);
+  --color-ring: #FF9ECD;
+  --radius: 1rem;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background: linear-gradient(135deg, #FFE5EC 0%, #E0F4FF 50%, #F0E6FF 100%);
+  background-attachment: fixed;
+  color: var(--color-foreground);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-gentle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 2s ease-in-out infinite;
+}
