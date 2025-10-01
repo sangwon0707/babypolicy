@@ -1,0 +1,26 @@
+# Web Framework
+fastapi
+uvicorn[standard]
+python-dotenv
+
+# Database & ORM
+sqlalchemy
+psycopg2-binary
+supabase
+sqlalchemy-pgvector
+
+# RAG & AI
+openai
+pypdf
+
+# Scraper
+selenium
+webdriver-manager
+
+# Auth
+python-jose[cryptography]
+passlib[bcrypt]
+
+# Other
+python-multipart
+httpx
