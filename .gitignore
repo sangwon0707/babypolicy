@@ -94,6 +94,10 @@ frontend/.env.production.local
 *.sqlite
 *.sqlite3
 
+# Documentation (local only)
+TEST_CREDENTIALS.md
+WORK_SUMMARY.md
+
 # OS
 .DS_Store
 .DS_Store?
