@@ -131,8 +131,8 @@ babypolicy/
 │   │   ├── chat.py            # Chat endpoints
 │   │   └── community.py       # Community endpoints
 │   ├── services/
-│   │   ├── babypolicy_chat/  # PREC 기반 챗봇 서비스 모듈
-│   │   └── babypolicy_chat_ingest.py # pdf_files → 벡터스토어 인제스트 스크립트
+│   │   ├── rag_system/       # PREC 기반 챗봇 서비스 모듈
+│   │   └── rag_system_ingest.py # pdf_files → 벡터스토어 인제스트 스크립트
 │   ├── init_supabase.sql      # DB initialization
 │   └── .env                    # Backend config
 │

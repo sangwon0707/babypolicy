@@ -73,39 +73,80 @@ def ingest_pdf_files(
         if policy_id and derived_policy_id != policy_id:
             continue
 
-        try:
-            ingest_result = service.ingest_pdf(
-                path=path,
-                policy_id=derived_policy_id,
-                policy_title=policy_title,
-                metadata=category_payload,
-            )
-            results.append(
-                IngestionResult(
-                    path=str(path),
-                    policy_id=derived_policy_id,
-                    chunks=len(ingest_result.chunks),
-                    status="success",
-                )
-            )
-        except FileNotFoundError as exc:
+        if not path.exists():
             results.append(
                 IngestionResult(
                     path=str(path),
                     policy_id=derived_policy_id,
                     chunks=0,
                     status="missing",
-                    message=str(exc),
+                    message="경로를 찾을 수 없습니다.",
                 )
             )
-        except Exception as exc:  # pragma: no cover - defensive logging
+            continue
+
+        if not path.is_dir():
             results.append(
                 IngestionResult(
                     path=str(path),
                     policy_id=derived_policy_id,
                     chunks=0,
-                    status="error",
-                    message=str(exc),
+                    status="skipped",
+                    message="폴더 경로가 아닙니다. 폴더만 지원합니다.",
                 )
             )
+            # 기존 단일 파일 처리 로직은 더 이상 사용하지 않으므로 참고용으로 남겨둠.
+            # 이전 코드: ingest_pdf(...)를 직접 호출해 단일 PDF를 처리했습니다.
+            continue
+
+        pdf_candidates = sorted(path.glob("**/*.pdf"))
+        if not pdf_candidates:
+            results.append(
+                IngestionResult(
+                    path=str(path),
+                    policy_id=derived_policy_id,
+                    chunks=0,
+                    status="skipped",
+                    message="폴더에 PDF 파일이 없습니다.",
+                )
+            )
+            continue
+
+        for pdf_path in pdf_candidates:
+            actual_policy_id = f"{derived_policy_id}-{pdf_path.stem}"
+            try:
+                ingest_result = service.ingest_pdf(
+                    path=pdf_path,
+                    policy_id=actual_policy_id,
+                    policy_title=policy_title,
+                    metadata=category_payload,
+                )
+                results.append(
+                    IngestionResult(
+                        path=str(pdf_path),
+                        policy_id=actual_policy_id,
+                        chunks=len(ingest_result.chunks),
+                        status="success",
+                    )
+                )
+            except FileNotFoundError as exc:
+                results.append(
+                    IngestionResult(
+                        path=str(pdf_path),
+                        policy_id=actual_policy_id,
+                        chunks=0,
+                        status="missing",
+                        message=str(exc),
+                    )
+                )
+            except Exception as exc:  # pragma: no cover - defensive logging
+                results.append(
+                    IngestionResult(
+                        path=str(pdf_path),
+                        policy_id=actual_policy_id,
+                        chunks=0,
+                        status="error",
+                        message=str(exc),
+                    )
+                )
     return results

@@ -7,8 +7,8 @@ from typing import Optional, List
 from supabase import Client
 
 from backend.database import get_supabase
-from backend.services.babypolicy_chat import get_chat_service
-from backend.services.babypolicy_chat.ingest import IngestionResult, ingest_pdf_files
+from backend.services.rag_system import get_chat_service
+from backend.services.rag_system.ingest import IngestionResult, ingest_pdf_files
 
 
 def _print_summary(results: List[IngestionResult]) -> None:

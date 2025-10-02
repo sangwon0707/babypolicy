@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS policies (
 
 CREATE TABLE IF NOT EXISTS policy_chunks (
     id TEXT PRIMARY KEY,
-    doc_id TEXT NOT NULL REFERENCES policies(id) ON DELETE CASCADE,
+    doc_id TEXT NOT NULL,
     chunk_index INT NOT NULL,
     content TEXT,
     metadata JSONB,

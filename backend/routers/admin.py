@@ -5,8 +5,8 @@ from typing import Optional
 
 from ..database import get_supabase
 from ..services import scraper_service
-from ..services.babypolicy_chat import get_chat_service
-from ..services.babypolicy_chat.ingest import ingest_pdf_files
+from ..services.rag_system import get_chat_service
+from ..services.rag_system.ingest import ingest_pdf_files
 from ..auth.utils import get_current_user
 
 router = APIRouter()

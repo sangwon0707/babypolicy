@@ -5,7 +5,7 @@ from supabase import Client
 
 from .. import crud, schemas
 from ..database import get_supabase
-from ..services.babypolicy_chat import get_chat_service
+from ..services.rag_system import get_chat_service
 from ..auth.utils import get_current_user
 
 router = APIRouter()
