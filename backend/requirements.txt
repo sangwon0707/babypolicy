@@ -7,11 +7,13 @@ python-dotenv
 sqlalchemy
 psycopg2-binary
 supabase
-sqlalchemy-pgvector
+# sqlalchemy-pgvector
+pgvector
 
 # RAG & AI
 openai
 pypdf
+sentence-transformers
 
 # Scraper
 selenium

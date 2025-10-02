@@ -1,9 +1,11 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
 
 from .. import crud, schemas
 from ..database import get_supabase
-from ..services import rag_service
+from ..services.babypolicy_chat import get_chat_service
 from ..auth.utils import get_current_user
 
 router = APIRouter()
@@ -34,8 +36,24 @@ def chat_with_rag(
         content=request.message
     )
 
-    # Get answer from RAG service
-    rag_response = rag_service.answer_question(supabase=supabase, request=request, user_id=user_id)
+    chat_service = get_chat_service(supabase=supabase)
+    service_response = chat_service.answer(request.message)
+
+    sources = [
+        schemas.RagSource(
+            chunk_id=source.get("id"),
+            doc_id=source.get("source", ""),
+            page=source.get("page"),
+            content=source.get("text", ""),
+        )
+        for source in service_response.get("sources", [])
+    ]
+
+    rag_response = schemas.ChatResponse(
+        answer=service_response.get("answer", ""),
+        conversation_id=request.conversation_id or uuid.uuid4(),
+        sources=sources,
+    )
 
     # Save AI message
     crud.create_message(

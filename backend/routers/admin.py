@@ -4,7 +4,9 @@ from pydantic import BaseModel
 from typing import Optional
 
 from ..database import get_supabase
-from ..services import scraper_service, rag_service
+from ..services import scraper_service
+from ..services.babypolicy_chat import get_chat_service
+from ..services.babypolicy_chat.ingest import ingest_pdf_files
 from ..auth.utils import get_current_user
 
 router = APIRouter()
@@ -45,5 +47,7 @@ def process_rag_endpoint(
     Process downloaded PDFs with RAG (embedding and vector storage).
     Can process a specific policy or all unprocessed PDFs.
     """
-    result = rag_service.process_all_pdfs(supabase, policy_id=request.policy_id)
-    return {"message": "RAG processing started.", "details": result}
+    chat_service = get_chat_service(supabase=supabase)
+    results = ingest_pdf_files(supabase, chat_service, policy_id=request.policy_id)
+    payload = [result.__dict__ for result in results]
+    return {"message": "PDF ingestion completed.", "details": payload}
