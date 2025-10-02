@@ -421,16 +421,18 @@ npm run dev
 - **파일**: `backend/routers/admin.py`
 - **수정하면 바뀌는 것**:
   - PDF 스크래핑 설정
-  - RAG 처리 시작
+  - `pdf_files` → 벡터스토어 인제스트 트리거(`/process-rag`)
 
 #### **RAG (AI 학습 & 답변)**
-- **파일**: `backend/services/rag_service.py`
+- **파일**: `backend/services/babypolicy_chat/service.py`, `backend/services/babypolicy_chat/vector_store.py`
+- **관련 유틸**: `backend/services/babypolicy_chat_ingest.py`
 - **수정하면 바뀌는 것**:
-  - PDF 텍스트 추출 방식
-  - 텍스트 청크(조각) 크기
-  - OpenAI 임베딩 모델
-  - AI 답변 생성 프롬프트 (한국어 답변 강제 등)
-  - 유사도 검색 개수 (top_k)
+  - PDF 텍스트 청크 분할/임베딩 방식 및 배치 크기
+  - OpenAI 임베딩/챗 모델 선택
+  - AI 답변 시스템 프롬프트 (한국어 답변 강제 등)
+  - Supabase 벡터 테이블/매치 함수 설정
+  - `pdf_files` 테이블을 불러와 임베딩할 때 사용할 메타데이터 규칙
+  - 관리자용 인제스트 스크립트 실행 (`python -m backend.services.babypolicy_chat_ingest --echo`)
 
 #### **PDF 스크래핑 (복지로 사이트)**
 - **파일**: `backend/services/scraper_service.py`
@@ -662,7 +664,8 @@ babypolicy/
 │   │   ├── user.py            # User profile endpoints
 │   │   └── admin.py           # Admin endpoints (scraper, RAG)
 │   └── services/
-│       ├── rag_service.py     # RAG processing & Q&A
+│       ├── babypolicy_chat/   # PREC 기반 챗봇 서비스 모듈
+│       ├── babypolicy_chat_ingest.py # pdf_files → 벡터스토어 수동 인제스트 스크립트
 │       └── scraper_service.py # PDF scraping from Bokjiro
 │
 └── frontend/

@@ -144,10 +144,10 @@ class ChatRequest(BaseModel):
     conversation_id: Optional[uuid.UUID] = None
 
 class RagSource(BaseModel):
+    chunk_id: Optional[str] = None
     doc_id: str
     page: Optional[int] = None
     content: str
-    score: float
 
 class ChatResponse(BaseModel):
     answer: str

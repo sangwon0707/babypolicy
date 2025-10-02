@@ -11,7 +11,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 from supabase import Client
 
 from .. import crud
-from . import rag_service
 
 # --- Settings ---
 BASE_URL = "https://www.bokjiro.go.kr/ssis-tbu/twataa/wlfareInfo/moveTWAT52005M.do?page=1&orderBy=date&tabId=1&sidoCd=1100000000&period=%EC%9E%84%EC%8B%A0%20%C2%B7%20%EC%B6%9C%EC%82%B0,%EC%98%81%EC%9C%A0%EC%95%84,%EC%95%84%EB%8F%99"
