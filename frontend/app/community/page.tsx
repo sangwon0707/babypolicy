@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, MessageCircle, Heart, Eye, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MessageCircle, Eye, Pencil } from "lucide-react";
 import { communityApi } from "@/lib/api";
 
 interface Post {
@@ -68,106 +67,131 @@ export default function CommunityPage() {
     return date.toLocaleDateString("ko-KR");
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50/30 to-pink-50/30 pb-20">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-purple-100 p-4 sticky top-0 z-10 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-              <span className="text-2xl">👨‍👩‍👧‍👦</span>
-              우리들의 이야기
-            </h1>
-            <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-              <Sparkles className="w-3 h-3" />
-              육아 경험을 나눠요
-            </p>
-          </div>
-          <Link href="/community/create">
-            <Button className="rounded-2xl bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 shadow-md">
-              <Plus className="w-5 h-5 mr-1" />
-              글쓰기
-            </Button>
-          </Link>
-        </div>
+  const formatNumber = (num: number) => {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    }
+    return num.toString();
+  };
 
-        {/* Categories */}
-        <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide">
-          <button
-            onClick={() => setSelectedCategory(undefined)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-              !selectedCategory
-                ? "bg-gradient-to-r from-purple-400 to-pink-400 text-white shadow-md"
-                : "bg-white/70 text-gray-600 hover:bg-white"
-            }`}
-          >
-            전체
-          </button>
-          {categories.map((category) => (
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-5 py-4 sticky top-0 z-10">
+        <h1 className="text-xl font-bold text-gray-900 mb-4">커뮤니티</h1>
+
+        {/* Icon Categories - 2 rows */}
+        <div className="overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-3 min-w-max pb-2">
             <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                selectedCategory === category.id
-                  ? "bg-gradient-to-r from-purple-400 to-pink-400 text-white shadow-md"
-                  : "bg-white/70 text-gray-600 hover:bg-white"
-              }`}
+              onClick={() => setSelectedCategory(undefined)}
+              className="flex flex-col items-center gap-1 min-w-[64px]"
             >
-              {category.icon_emoji} {category.label}
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
+                !selectedCategory ? 'bg-gradient-to-br from-pink-400 to-purple-400' : 'bg-gray-100'
+              }`}>
+                <span className="text-2xl">🏠</span>
+              </div>
+              <span className="text-xs font-medium text-gray-700">전체</span>
             </button>
-          ))}
+
+            {categories.slice(0, 9).map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className="flex flex-col items-center gap-1 min-w-[64px]"
+              >
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
+                  selectedCategory === category.id
+                    ? 'bg-gradient-to-br from-pink-400 to-purple-400'
+                    : 'bg-gray-100'
+                }`}>
+                  <span className="text-2xl">{category.icon_emoji || '📌'}</span>
+                </div>
+                <span className="text-xs font-medium text-gray-700 text-center leading-tight">
+                  {category.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Section Title */}
+      <div className="px-5 py-4 bg-white mt-2">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-bold text-gray-900">다들 이런 얘기하는 중</h2>
+          <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center">
+            <span className="text-xs text-gray-600">ℹ️</span>
+          </div>
         </div>
       </div>
 
       {/* Posts */}
-      <div className="p-4 space-y-3">
+      <div className="bg-white pb-24">
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="inline-block p-4 bg-white/70 backdrop-blur-sm rounded-full shadow-lg">
-              <div className="w-8 h-8 border-4 border-pink-400 border-t-transparent rounded-full animate-spin" />
-            </div>
+          <div className="text-center py-16">
+            <div className="w-10 h-10 border-4 border-pink-400 border-t-transparent rounded-full animate-spin mx-auto" />
             <p className="mt-4 text-gray-500 text-sm">로딩 중...</p>
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-12 bg-white/70 backdrop-blur-sm rounded-2xl shadow-sm">
-            <span className="text-5xl block mb-4">💬</span>
+          <div className="text-center py-16">
+            <span className="text-5xl block mb-3">💬</span>
             <p className="text-gray-500">아직 게시글이 없어요</p>
             <p className="text-sm text-gray-400 mt-2">첫 번째 게시글을 작성해보세요!</p>
           </div>
         ) : (
-          posts.map((post) => (
+          posts.map((post, index) => (
             <Link key={post.id} href={`/community/${post.id}`}>
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-sm hover:shadow-md transition-all border border-purple-100 hover:border-purple-300">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2">
-                      {post.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                      {post.content}
-                    </p>
-
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span className="font-medium text-purple-600">
-                        {post.author.name || "익명"}
-                      </span>
-                      <span>{formatDate(post.created_at)}</span>
-                    </div>
-                  </div>
+              <div className={`px-5 py-4 hover:bg-gray-50 transition-colors ${
+                index !== posts.length - 1 ? 'border-b border-gray-100' : ''
+              }`}>
+                {/* Category Badge */}
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-pink-50 text-pink-600 rounded text-xs font-semibold">
+                    🔥 인기
+                  </span>
+                  {post.category_id && (
+                    <span className="text-xs text-gray-500">
+                      {categories.find(c => c.id === post.category_id)?.label}
+                    </span>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-4 h-4" />
-                    {post.views_count}
+                {/* Title */}
+                <h3 className="text-base font-bold text-gray-900 mb-2 line-clamp-2 leading-snug">
+                  {post.title}
+                </h3>
+
+                {/* Content Preview */}
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+                  {post.content}
+                </p>
+
+                {/* Author & Stats */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pink-300 to-purple-300 flex items-center justify-center">
+                      <span className="text-xs text-white font-semibold">
+                        {post.author.name?.charAt(0) || '익'}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {post.author.name || "익명"}
+                    </span>
+                    <span className="text-xs text-gray-400">·</span>
+                    <span className="text-xs text-gray-400">{formatDate(post.created_at)}</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Heart className="w-4 h-4" />
-                    {post.likes_count}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageCircle className="w-4 h-4" />
-                    {post.comments_count}
+
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{formatNumber(post.views_count)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>{formatNumber(post.comments_count)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -175,6 +199,16 @@ export default function CommunityPage() {
           ))
         )}
       </div>
+
+      {/* Floating Action Button */}
+      <Link href="/community/create">
+        <button
+          aria-label="게시글 작성"
+          className="fixed right-5 bottom-24 w-14 h-14 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center z-20"
+        >
+          <Pencil className="w-6 h-6 text-white" />
+        </button>
+      </Link>
 
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar {

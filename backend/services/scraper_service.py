@@ -2,16 +2,13 @@ import os
 import time
 import re
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from webdriver_manager.chrome import ChromeDriverManager
 from supabase import Client
 
 from .. import crud
-from . import rag_service
 
 # --- Settings ---
 BASE_URL = "https://www.bokjiro.go.kr/ssis-tbu/twataa/wlfareInfo/moveTWAT52005M.do?page=1&orderBy=date&tabId=1&sidoCd=1100000000&period=%EC%9E%84%EC%8B%A0%20%C2%B7%20%EC%B6%9C%EC%82%B0,%EC%98%81%EC%9C%A0%EC%95%84,%EC%95%84%EB%8F%99"
@@ -29,8 +26,9 @@ def setup_driver():
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    # Use Selenium Manager (built-in since Selenium 4.6+)
+    # No need for Service or ChromeDriverManager
+    driver = webdriver.Chrome(options=chrome_options)
     return driver
 
 def clean_policy_title(raw_title):

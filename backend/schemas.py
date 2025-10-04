@@ -144,10 +144,10 @@ class ChatRequest(BaseModel):
     conversation_id: Optional[uuid.UUID] = None
 
 class RagSource(BaseModel):
+    chunk_id: Optional[str] = None
     doc_id: str
     page: Optional[int] = None
     content: str
-    score: float
 
 class ChatResponse(BaseModel):
     answer: str
@@ -160,6 +160,17 @@ class Conversation(BaseModel):
     title: Optional[str] = None
     created_at: datetime
     last_message_at: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
+
+class Message(BaseModel):
+    id: uuid.UUID
+    conversation_id: uuid.UUID
+    role: str
+    content: str
+    created_at: datetime
+    rag_sources: Optional[Any] = None
 
     class Config:
         orm_mode = True

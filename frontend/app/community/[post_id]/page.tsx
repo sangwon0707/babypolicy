@@ -1,3 +1,8 @@
-export default function PostPage({ params }: { params: { post_id: string } }) {
-  return <div>Post Page: {params.post_id}</div>;
+export default async function PostPage({
+  params,
+}: {
+  params: Promise<{ post_id: string }>;
+}) {
+  const { post_id } = await params;
+  return <div>Post Page: {post_id}</div>;
 }

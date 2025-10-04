@@ -66,6 +66,14 @@ CREATE TABLE IF NOT EXISTS user_policies (
     PRIMARY KEY (user_id, policy_id)
 );
 
+CREATE TABLE IF NOT EXISTS pdf_files (
+    id BIGSERIAL PRIMARY KEY,
+    path TEXT NOT NULL UNIQUE,
+    category JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE
+);
+
 -- ========================
 -- 3. 커뮤니티
 -- ========================
@@ -193,6 +201,44 @@ CREATE TABLE IF NOT EXISTS notifications (
     is_read BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- ========================
+-- Vector Search Setup
+-- ========================
+
+DROP INDEX IF EXISTS policy_chunks_embedding_ivfflat;
+CREATE INDEX policy_chunks_embedding_ivfflat
+  ON policy_chunks USING ivfflat (embedding vector_cosine_ops)
+  WITH (lists = 100);
+
+DROP FUNCTION IF EXISTS match_policy_chunks(vector, int, jsonb);
+DROP FUNCTION IF EXISTS match_policy_chunks(vector, int);
+
+CREATE FUNCTION match_policy_chunks(
+  query_embedding vector(1024),
+  match_count int
+) RETURNS TABLE (
+  id text,
+  doc_id text,
+  chunk_index int,
+  content text,
+  metadata jsonb,
+  embedding vector(1024)
+) LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    pc.id,
+    pc.doc_id,
+    pc.chunk_index,
+    pc.content,
+    pc.metadata,
+    pc.embedding
+  FROM policy_chunks AS pc
+  ORDER BY pc.embedding <-> query_embedding
+  LIMIT match_count;
+END;
+$$;
 
 -- ========================
 -- Indexes for Performance

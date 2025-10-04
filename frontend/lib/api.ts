@@ -62,6 +62,21 @@ export const chatApi = {
       body: JSON.stringify({ message, conversation_id: conversationId }),
     });
   },
+
+  async getConversations(token: string): Promise<any[]> {
+    return apiRequest('/conversations', { token });
+  },
+
+  async getConversationMessages(conversationId: string, token: string): Promise<any[]> {
+    return apiRequest(`/conversations/${conversationId}/messages`, { token });
+  },
+
+  async deleteConversation(conversationId: string, token: string): Promise<any> {
+    return apiRequest(`/conversations/${conversationId}`, {
+      method: 'DELETE',
+      token,
+    });
+  },
 };
 
 // Community API

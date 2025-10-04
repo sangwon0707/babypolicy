@@ -102,6 +102,39 @@ def get_conversation(supabase: Client, conversation_id: str):
     response = supabase.table("conversations").select("*").eq("id", conversation_id).execute()
     return response.data[0] if response.data else None
 
+def get_user_conversations(supabase: Client, user_id: str, limit: int = 50):
+    """
+    Get all conversations for a user, ordered by most recent activity.
+    """
+    response = supabase.table("conversations").select("*").eq("user_id", user_id).order("last_message_at", desc=True).limit(limit).execute()
+    return response.data if response.data else []
+
+def get_conversation_messages(supabase: Client, conversation_id: str, limit: Optional[int] = None):
+    """
+    Get all messages for a conversation, ordered chronologically.
+    If limit is provided, returns only the most recent N messages.
+    """
+    query = supabase.table("messages").select("*").eq("conversation_id", conversation_id).order("created_at", desc=False)
+
+    if limit:
+        query = query.limit(limit)
+
+    response = query.execute()
+    return response.data if response.data else []
+
+def get_recent_conversation_messages(supabase: Client, conversation_id: str, limit: int = 10):
+    """
+    Get the most recent N messages from a conversation for context window.
+    Returns messages in chronological order (oldest to newest).
+    """
+    # Get last N messages in reverse order, then reverse the result
+    response = supabase.table("messages").select("*").eq("conversation_id", conversation_id).order("created_at", desc=True).limit(limit).execute()
+
+    if response.data:
+        # Reverse to get chronological order
+        return list(reversed(response.data))
+    return []
+
 # =======================
 # Community CRUD
 # =======================

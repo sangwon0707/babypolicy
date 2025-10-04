@@ -88,6 +88,7 @@ frontend/.env.production.local
 
 # Claude Code
 .claude/
+.playwright-mcp/
 
 # Database
 *.db
@@ -121,3 +122,7 @@ coverage/
 data/pdfs/
 data/downloads/
 *.pdf
+
+# Archive files
+frontend-arch.zip
+backend-arch.zip
