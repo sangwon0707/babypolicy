@@ -21,10 +21,14 @@
 ## 🌟 Features
 
 - 🤖 **AI 챗봇** - GPT 기반 RAG로 정확한 정책 정보 제공
+  - 💬 대화 히스토리 관리 (사용자별 대화 목록)
+  - 🧠 컨텍스트 인식 답변 (최근 10개 메시지 기반)
+  - 📝 웰컴 스크린 및 예시 질문 카드
+  - 🗑️ 대화 삭제 기능
 - 👨‍👩‍👧‍👦 **커뮤니티** - 육아 경험 공유 및 소통
 - 📋 **정책 검색** - 지역, 소득, 가족 구성별 맞춤 정책
 - 💬 **실시간 대화** - 자연어로 편하게 질문
-- 🎨 **Baby-Friendly UI** - 귀엽고 편안한 디자인
+- 🎨 **Baby-Friendly UI** - 귀엽고 편안한 모바일 최적화 디자인
 
 ---
 
@@ -39,8 +43,10 @@
 ### Backend
 - **FastAPI** - 고성능 Python 웹 프레임워크
 - **Supabase Client** - PostgreSQL + 실시간 DB
-- **OpenAI API** - GPT-4 기반 RAG
-- **pgvector** - 벡터 검색
+- **OpenAI API / Sentence Transformers** - 임베딩 및 채팅 모델
+  - OpenAI GPT-4.1-nano (채팅)
+  - BGE-M3-Korean (한국어 임베딩, 1024차원)
+- **pgvector** - 벡터 검색 (코사인 유사도)
 
 ### Database
 - **Supabase (PostgreSQL)** - 메인 데이터베이스
@@ -333,6 +339,9 @@ npm run dev
   - 메시지 입력창 디자인
   - AI 답변 표시 방식
   - 출처 정보 표시
+  - 햄버거 메뉴 및 사이드바 (대화 목록)
+  - 웰컴 스크린 및 예시 질문 카드
+  - 대화 삭제 모달 디자인
 
 #### **커뮤니티 페이지**
 - **파일**: `frontend/app/community/page.tsx`
@@ -400,6 +409,10 @@ npm run dev
   - 사용자 질문 처리
   - AI 답변 요청
   - 대화 기록 저장 방식
+  - 대화 목록 조회 (GET /api/conversations)
+  - 대화 메시지 조회 (GET /api/conversations/{id}/messages)
+  - 대화 삭제 (DELETE /api/conversations/{id})
+  - 컨텍스트 히스토리 전달 (최근 10개 메시지)
 
 #### **커뮤니티 게시글**
 - **파일**: `backend/routers/community.py`
@@ -424,13 +437,21 @@ npm run dev
   - RAG 처리 시작
 
 #### **RAG (AI 학습 & 답변)**
-- **파일**: `backend/services/rag_service.py`
+- **폴더**: `backend/services/rag_system/`
+- **주요 파일**:
+  - `service.py` - RAG 서비스 메인 로직 (RagService 클래스)
+  - `ingest.py` - PDF 임베딩 처리
+  - `openai_client.py` - OpenAI / Sentence Transformers 클라이언트
+  - `vector_store.py` - Supabase 벡터 검색
+  - `pdf_loader.py` - PDF 텍스트 추출
+  - `reranker.py` - 검색 결과 재순위화
 - **수정하면 바뀌는 것**:
   - PDF 텍스트 추출 방식
-  - 텍스트 청크(조각) 크기
-  - OpenAI 임베딩 모델
+  - 텍스트 청크(조각) 크기 (기본: 1200자, 겹침: 200자)
+  - 임베딩 모델 (BGE-M3-Korean, 1024차원)
   - AI 답변 생성 프롬프트 (한국어 답변 강제 등)
-  - 유사도 검색 개수 (top_k)
+  - 유사도 검색 개수 (top_k: 50)
+  - 컨텍스트 히스토리 기반 답변 생성
 
 #### **PDF 스크래핑 (복지로 사이트)**
 - **파일**: `backend/services/scraper_service.py`
@@ -662,8 +683,17 @@ babypolicy/
 │   │   ├── user.py            # User profile endpoints
 │   │   └── admin.py           # Admin endpoints (scraper, RAG)
 │   └── services/
-│       ├── rag_service.py     # RAG processing & Q&A
-│       └── scraper_service.py # PDF scraping from Bokjiro
+│       ├── rag_system/         # RAG system (refactored)
+│       │   ├── service.py     # RagService class
+│       │   ├── ingest.py      # PDF embedding
+│       │   ├── openai_client.py # Embedding/Chat clients
+│       │   ├── vector_store.py # Vector search
+│       │   ├── pdf_loader.py  # PDF text extraction
+│       │   └── reranker.py    # Result reranking
+│       ├── babypolicy_chat_ingest.py # CLI for PDF embedding
+│       ├── scraper_service.py # PDF scraping from Bokjiro
+│       ├── bokjiro_scraper/   # Bokjiro specific scraper
+│       └── auto_scraper/      # Auto policy scraper
 │
 └── frontend/
     ├── .env.local.example      # Frontend environment template
@@ -726,7 +756,10 @@ babypolicy/
 - `GET /auth/me` - Get current user (requires authentication)
 
 ### Chat (`/api/chat`)
-- `POST /chat` - Send message to AI chatbot (RAG-powered)
+- `POST /chat` - Send message to AI chatbot (RAG-powered, context-aware)
+- `GET /conversations` - Get user's conversation list
+- `GET /conversations/{id}/messages` - Get messages from a conversation
+- `DELETE /conversations/{id}` - Delete a conversation (cascade deletes messages)
 
 ### Community (`/api/community`)
 - `GET /community/categories` - Get all categories
