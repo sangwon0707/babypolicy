@@ -244,8 +244,8 @@ export default function MePage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="px-6 -mt-6">
-        <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="px-6 mb-6">
+        <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => router.push("/me/saved-policies")}
             className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow border border-gray-100"

@@ -50,3 +50,25 @@ def create_comment_for_post(
 ):
     user_id = current_user["user_id"]
     return crud.create_comment(supabase=supabase, comment=comment, post_id=post_id, author_id=user_id)
+
+@router.post("/posts/{post_id}/like")
+def toggle_like(
+    post_id: str,
+    supabase: Client = Depends(get_supabase),
+    current_user: dict = Depends(get_current_user)
+):
+    """Toggle like on a post. Returns liked status."""
+    user_id = current_user["user_id"]
+    is_liked = crud.toggle_post_like(supabase, post_id=post_id, user_id=user_id)
+    return {"liked": is_liked}
+
+@router.get("/posts/{post_id}/liked")
+def check_liked(
+    post_id: str,
+    supabase: Client = Depends(get_supabase),
+    current_user: dict = Depends(get_current_user)
+):
+    """Check if current user has liked the post."""
+    user_id = current_user["user_id"]
+    is_liked = crud.check_post_liked(supabase, post_id=post_id, user_id=user_id)
+    return {"liked": is_liked}

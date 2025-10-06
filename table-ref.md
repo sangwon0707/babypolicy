@@ -180,3 +180,86 @@ message TEXT,
 is_read BOOLEAN DEFAULT false,
 created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- ========================
+-- Database Functions (RPC)
+-- ========================
+
+-- Community Helper Functions
+
+-- Increment comments count
+CREATE OR REPLACE FUNCTION increment_comments_count(p_post_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE posts
+  SET comments_count = comments_count + 1
+  WHERE id = p_post_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Decrement comments count
+CREATE OR REPLACE FUNCTION decrement_comments_count(p_post_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE posts
+  SET comments_count = GREATEST(comments_count - 1, 0)
+  WHERE id = p_post_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Increment views count
+CREATE OR REPLACE FUNCTION increment_views_count(p_post_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE posts
+  SET views_count = views_count + 1
+  WHERE id = p_post_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Increment likes count
+CREATE OR REPLACE FUNCTION increment_likes_count(p_post_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE posts
+  SET likes_count = likes_count + 1
+  WHERE id = p_post_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Decrement likes count
+CREATE OR REPLACE FUNCTION decrement_likes_count(p_post_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE posts
+  SET likes_count = GREATEST(likes_count - 1, 0)
+  WHERE id = p_post_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Vector Search Function
+CREATE FUNCTION match_policy_chunks(
+  query_embedding vector(1024),
+  match_count int
+) RETURNS TABLE (
+  id text,
+  doc_id text,
+  chunk_index int,
+  content text,
+  metadata jsonb,
+  embedding vector(1024)
+) LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    pc.id,
+    pc.doc_id,
+    pc.chunk_index,
+    pc.content,
+    pc.metadata,
+    pc.embedding
+  FROM policy_chunks AS pc
+  ORDER BY pc.embedding <-> query_embedding
+  LIMIT match_count;
+END;
+$$;

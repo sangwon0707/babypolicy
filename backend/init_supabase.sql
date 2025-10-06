@@ -241,6 +241,60 @@ END;
 $$;
 
 -- ========================
+-- Community Helper Functions
+-- ========================
+
+-- Increment comments count
+CREATE OR REPLACE FUNCTION increment_comments_count(p_post_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE posts
+  SET comments_count = comments_count + 1
+  WHERE id = p_post_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Decrement comments count
+CREATE OR REPLACE FUNCTION decrement_comments_count(p_post_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE posts
+  SET comments_count = GREATEST(comments_count - 1, 0)
+  WHERE id = p_post_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Increment views count
+CREATE OR REPLACE FUNCTION increment_views_count(p_post_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE posts
+  SET views_count = views_count + 1
+  WHERE id = p_post_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Increment likes count
+CREATE OR REPLACE FUNCTION increment_likes_count(p_post_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE posts
+  SET likes_count = likes_count + 1
+  WHERE id = p_post_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Decrement likes count
+CREATE OR REPLACE FUNCTION decrement_likes_count(p_post_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE posts
+  SET likes_count = GREATEST(likes_count - 1, 0)
+  WHERE id = p_post_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ========================
 -- Indexes for Performance
 -- ========================
 

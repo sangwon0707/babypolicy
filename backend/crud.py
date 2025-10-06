@@ -146,6 +146,18 @@ def get_posts(supabase: Client, skip: int = 0, limit: int = 10, category_id: str
         query = query.eq("category_id", category_id)
 
     response = query.execute()
+
+    # Transform nested user_profiles.name to author.name for frontend
+    if response.data:
+        for post in response.data:
+            if post.get("author") and post["author"].get("user_profiles"):
+                profiles = post["author"]["user_profiles"]
+                # Handle both single object and array of profiles
+                if isinstance(profiles, list) and len(profiles) > 0:
+                    post["author"]["name"] = profiles[0].get("name")
+                elif isinstance(profiles, dict):
+                    post["author"]["name"] = profiles.get("name")
+
     return response.data if response.data else []
 
 def create_post(supabase: Client, post: schemas.PostCreate, author_id: str):
@@ -156,12 +168,41 @@ def create_post(supabase: Client, post: schemas.PostCreate, author_id: str):
     response = supabase.table("posts").insert(post_data).execute()
     return response.data[0] if response.data else None
 
-def get_post(supabase: Client, post_id: str):
+def get_post(supabase: Client, post_id: str, increment_views: bool = True):
     response = supabase.table("posts").select("*, author:users(id, email, user_profiles(name))").eq("id", post_id).execute()
-    return response.data[0] if response.data else None
+
+    # Increment views count
+    if increment_views and response.data:
+        supabase.rpc("increment_views_count", {"p_post_id": post_id}).execute()
+
+    # Transform nested user_profiles.name to author.name for frontend
+    if response.data:
+        post = response.data[0]
+        if post.get("author") and post["author"].get("user_profiles"):
+            profiles = post["author"]["user_profiles"]
+            # Handle both single object and array of profiles
+            if isinstance(profiles, list) and len(profiles) > 0:
+                post["author"]["name"] = profiles[0].get("name")
+            elif isinstance(profiles, dict):
+                post["author"]["name"] = profiles.get("name")
+        return post
+
+    return None
 
 def get_comments_for_post(supabase: Client, post_id: str):
     response = supabase.table("comments").select("*, author:users(id, email, user_profiles(name))").eq("post_id", post_id).order("created_at").execute()
+
+    # Transform nested user_profiles.name to author.name for frontend
+    if response.data:
+        for comment in response.data:
+            if comment.get("author") and comment["author"].get("user_profiles"):
+                profiles = comment["author"]["user_profiles"]
+                # Handle both single object and array of profiles
+                if isinstance(profiles, list) and len(profiles) > 0:
+                    comment["author"]["name"] = profiles[0].get("name")
+                elif isinstance(profiles, dict):
+                    comment["author"]["name"] = profiles.get("name")
+
     return response.data if response.data else []
 
 def create_comment(supabase: Client, comment: schemas.CommentCreate, post_id: str, author_id: str):
@@ -173,10 +214,31 @@ def create_comment(supabase: Client, comment: schemas.CommentCreate, post_id: st
     response = supabase.table("comments").insert(comment_data).execute()
 
     # Update comments_count on the post
-    supabase.rpc("increment_comments_count", {"post_id": post_id}).execute()
+    supabase.rpc("increment_comments_count", {"p_post_id": post_id}).execute()
 
     return response.data[0] if response.data else None
 
 def get_categories(supabase: Client):
     response = supabase.table("categories").select("*").order("sort_order").execute()
     return response.data if response.data else []
+
+def toggle_post_like(supabase: Client, post_id: str, user_id: str):
+    """Toggle like on a post. Returns True if liked, False if unliked."""
+    # Check if already liked
+    existing = supabase.table("post_likes").select("*").eq("post_id", post_id).eq("user_id", user_id).execute()
+
+    if existing.data:
+        # Unlike
+        supabase.table("post_likes").delete().eq("post_id", post_id).eq("user_id", user_id).execute()
+        supabase.rpc("decrement_likes_count", {"p_post_id": post_id}).execute()
+        return False
+    else:
+        # Like
+        supabase.table("post_likes").insert({"post_id": post_id, "user_id": user_id}).execute()
+        supabase.rpc("increment_likes_count", {"p_post_id": post_id}).execute()
+        return True
+
+def check_post_liked(supabase: Client, post_id: str, user_id: str):
+    """Check if user has liked a post."""
+    response = supabase.table("post_likes").select("*").eq("post_id", post_id).eq("user_id", user_id).execute()
+    return len(response.data) > 0 if response.data else False
