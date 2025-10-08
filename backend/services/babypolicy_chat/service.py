@@ -40,7 +40,7 @@ class BabyPolicyChatService:
         match_function: str,
         chunk_size: int = 1200,
         chunk_overlap: int = 200,
-        embedding_batch_size: int = 64,
+        embedding_batch_size: int = 128,
         reranker: CrossEncoderReranker | None = None,
         rerank_top_n: Optional[int] = None,
     ) -> None:
