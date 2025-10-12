@@ -380,7 +380,7 @@ export default function ChatPage() {
             <Menu className="w-5 h-5 text-pink-600" />
           </button>
           <h1 className="text-lg font-semibold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            맘스가이드 AI 문의
+            AI 챗봇
           </h1>
         </div>
       </div>

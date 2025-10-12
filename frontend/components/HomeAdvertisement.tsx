@@ -86,48 +86,48 @@ export default function HomeAdvertisement() {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Header */}
-      <div className="px-3 py-2 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-orange-100 flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="text-base">🎁</span>
-          <h3 className="text-xs font-bold text-gray-800">육아 필수템 특가</h3>
+      <div className="px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-orange-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🎁</span>
+          <h3 className="text-sm font-bold text-gray-800">육아 필수템 특가</h3>
         </div>
-        <span className="text-[10px] text-gray-500">AD</span>
+        <span className="text-xs text-gray-500">AD</span>
       </div>
 
       {/* Ad Content */}
-      <div className="relative px-3">
-        <div className="flex items-center gap-3 max-w-[420px] mx-auto">
+      <div className="relative">
+        <div className="flex items-center">
           {/* Image Section */}
-          <div className="w-28 flex-shrink-0 relative bg-gray-50">
-            <div className="h-24 relative">
+          <div className="w-1/3 relative bg-gray-50">
+            <div className="aspect-square relative">
               <Image
                 src={currentAd.image}
                 alt={currentAd.title}
                 fill
                 className="object-cover"
-                sizes="112px"
+                sizes="(max-width: 768px) 40vw"
               />
             </div>
           </div>
 
           {/* Info Section */}
-          <div className="flex-1 p-3">
+          <div className="w-2/3 p-3">
             {currentAd.badge && (
-              <span className="inline-block px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded mb-1.5">
+              <span className="inline-block px-2 py-0.5 bg-blue-500 text-white text-xs font-bold rounded mb-2">
                 🚀 {currentAd.badge}
               </span>
             )}
-            <h4 className="text-xs font-bold text-gray-900 mb-1 line-clamp-2">
+            <h4 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2">
               {currentAd.title}
             </h4>
 
             <div className="mb-2">
-              <div className="text-[11px] text-gray-400 line-through mb-0.5">
+              <div className="text-xs text-gray-400 line-through mb-1">
                 {currentAd.originalPrice.toLocaleString()}원
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-red-500 text-[11px] font-bold">{currentAd.discountRate}%</span>
-                <span className="text-sm font-bold text-gray-900">
+                <span className="text-red-500 text-xs font-bold">{currentAd.discountRate}%</span>
+                <span className="text-base font-bold text-gray-900">
                   {currentAd.finalPrice.toLocaleString()}원
                 </span>
               </div>
@@ -136,10 +136,10 @@ export default function HomeAdvertisement() {
             <div className="flex items-center gap-1">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-yellow-400 text-[9px]">⭐</span>
+                  <span key={i} className="text-yellow-400 text-[10px]">⭐</span>
                 ))}
               </div>
-              <span className="text-[10px] text-gray-500">({currentAd.reviewCount.toLocaleString()})</span>
+              <span className="text-xs text-gray-500">({currentAd.reviewCount.toLocaleString()})</span>
             </div>
           </div>
         </div>
