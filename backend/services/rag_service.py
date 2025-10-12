@@ -1,3 +1,16 @@
+'''
+===============================================
+LEGACY (미사용)
+-----------------------------------------------
+이 파일은 현재 채팅 RAG 서비스 경로에서 사용되지 않습니다.
+실제 동작 구현은 backend/services/rag_system/* 모듈을 사용합니다.
+
+요청에 따라 원본 코드를 주석 블록으로 보존하며, 실행/임포트되지 않도록 처리했습니다.
+아래는 참고용으로 남겨둔 원본 코드입니다. (실행되지 않음)
+===============================================
+
+원본 코드 (참고용):
+
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -221,3 +234,4 @@ def answer_question(supabase: Client, request: schemas.ChatRequest, user_id: uui
         conversation_id=request.conversation_id or uuid.uuid4(), # Placeholder
         sources=sources
     )
+'''

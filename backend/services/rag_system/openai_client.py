@@ -88,11 +88,13 @@ class OpenAIChatClient:
 
         if tools:
             kwargs["tools"] = tools
-            # Use provided tool_choice or default to "required" to force function calling
-            kwargs["tool_choice"] = tool_choice if tool_choice is not None else "required"
+            # Use provided tool_choice (typically "auto" to let GPT decide)
+            # Only set tool_choice if explicitly provided
+            if tool_choice is not None:
+                kwargs["tool_choice"] = tool_choice
             print(f"[DEBUG OpenAI] Sending tools to OpenAI: {tools}")
             print(f"[DEBUG OpenAI] Model: {self._model}")
-            print(f"[DEBUG OpenAI] tool_choice: {kwargs['tool_choice']}")
+            print(f"[DEBUG OpenAI] tool_choice: {kwargs.get('tool_choice', 'default (auto)')}")
 
         response = self._client.chat.completions.create(**kwargs)
         message = response.choices[0].message
