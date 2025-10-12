@@ -101,6 +101,9 @@ WORK_SUMMARY.md
 FUNCTION_CALLING_GUIDE.md
 TECH_STACK_PRESENTATION.md
 
+# Runtime PID (do not commit)
+backend/uvicorn.pid
+
 # OS
 .DS_Store
 .DS_Store?
