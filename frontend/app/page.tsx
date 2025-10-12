@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MessageSquare, Users, Sparkles, Baby } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import HomeBanner from "@/components/HomeBanner";
+import HomeAdvertisement from "@/components/HomeAdvertisement";
 import { communityApi } from "@/lib/api";
 
 export default function Home() {
@@ -96,9 +97,9 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="pb-20 bg-gray-50">
+            <div className="pb-16 bg-gray-50">
               {/* Hero Section */}
-              <div className="bg-gradient-to-br from-pink-400 to-purple-400 px-6 pt-12 pb-8">
+              <div className="bg-gradient-to-br from-pink-400 to-purple-400 px-4 pt-8 pb-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-pink-100 text-sm mb-1">안녕하세요</p>
@@ -113,12 +114,12 @@ export default function Home() {
               </div>
 
               {/* Auto-slide Policy Banner */}
-              <div className="px-6 mt-6 mb-6">
+              <div className="px-4 mt-3 mb-3">
                 <HomeBanner />
               </div>
 
               {/* Popular Posts Section */}
-              <div className="px-6 mb-8">
+              <div className="px-4 mb-6">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-xl">🔥</span>
                   <h2 className="text-lg font-bold text-gray-900">커뮤니티 인기글</h2>
@@ -178,6 +179,11 @@ export default function Home() {
                     })}
                   </div>
                 )}
+              </div>
+
+              {/* Advertisement Section */}
+              <div className="px-6 mb-8">
+                <HomeAdvertisement />
               </div>
 
               {/* Bottom Padding */}
