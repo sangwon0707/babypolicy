@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // 배너 데이터 타입
 interface BannerItem {
@@ -87,11 +86,40 @@ export default function HomeBanner() {
     return () => clearInterval(interval);
   }, [isPaused, nextSlide]);
 
+  // Touch swipe support for mobile
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.changedTouches[0].clientX);
+    setTouchEndX(null);
+    setIsPaused(true);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.changedTouches[0].clientX);
+  };
+  const onTouchEnd = () => {
+    if (touchStartX !== null && touchEndX !== null) {
+      const delta = touchEndX - touchStartX;
+      const threshold = 40; // px
+      if (delta > threshold) {
+        prevSlide();
+      } else if (delta < -threshold) {
+        nextSlide();
+      }
+    }
+    setIsPaused(false);
+    setTouchStartX(null);
+    setTouchEndX(null);
+  };
+
   return (
     <div
-      className="relative w-full h-48 overflow-hidden rounded-2xl shadow-lg group"
+      className="relative w-full h-40 overflow-hidden rounded-2xl shadow-lg"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
     >
       {/* 슬라이드 컨테이너 */}
       <div
@@ -129,41 +157,17 @@ export default function HomeBanner() {
             )}
 
             {/* 배너 컨텐츠 */}
-            <div className="relative h-full flex flex-col justify-center px-12 text-white z-10">
-              <h3 className="text-xl font-bold mb-2 drop-shadow-lg leading-tight">
+            <div className="relative h-full flex flex-col justify-center px-8 text-white z-10">
+              <h3 className="text-lg font-bold mb-1 drop-shadow-lg leading-tight">
                 {banner.title}
               </h3>
-              <p className="text-sm drop-shadow-md opacity-95 leading-relaxed whitespace-pre-line">
+              <p className="text-xs drop-shadow-md opacity-95 leading-relaxed whitespace-pre-line">
                 {banner.description}
               </p>
             </div>
           </div>
         ))}
       </div>
-
-      {/* 좌측 화살표 */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          prevSlide();
-        }}
-        className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center transition-all opacity-0 hover:opacity-100 group-hover:opacity-100"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft className="w-4 h-4 text-white" />
-      </button>
-
-      {/* 우측 화살표 */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          nextSlide();
-        }}
-        className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-full flex items-center justify-center transition-all opacity-0 hover:opacity-100 group-hover:opacity-100"
-        aria-label="Next slide"
-      >
-        <ChevronRight className="w-4 h-4 text-white" />
-      </button>
 
       {/* 인디케이터 dots */}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
