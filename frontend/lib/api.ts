@@ -77,6 +77,18 @@ export const chatApi = {
       token,
     });
   },
+
+  async executeFunction(functionName: string, args: any, conversationId: string | null, token: string): Promise<any> {
+    return apiRequest('/chat/execute-function', {
+      method: 'POST',
+      token,
+      body: JSON.stringify({
+        function_name: functionName,
+        arguments: args,
+        conversation_id: conversationId,
+      }),
+    });
+  },
 };
 
 // Community API
@@ -92,6 +104,10 @@ export const communityApi = {
       ...(categoryId && { category_id: categoryId }),
     });
     return apiRequest(`/community/posts?${params}`);
+  },
+
+  async getPopularPosts(limit = 2): Promise<any[]> {
+    return apiRequest(`/community/posts/popular?limit=${limit}`);
   },
 
   async getPost(postId: string) {
@@ -130,6 +146,20 @@ export const userApi = {
       method: 'PUT',
       token,
       body: JSON.stringify(data),
+    });
+  },
+};
+
+// Calendar API
+export const calendarApi = {
+  async getEvents(token: string): Promise<any[]> {
+    return apiRequest('/calendar/events', { token });
+  },
+
+  async deleteEvent(eventId: number, token: string): Promise<any> {
+    return apiRequest(`/calendar/events/${eventId}`, {
+      method: 'DELETE',
+      token,
     });
   },
 };

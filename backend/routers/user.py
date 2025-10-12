@@ -31,14 +31,14 @@ async def get_user_profile(
 ):
     """Get user profile information"""
     try:
-        response = supabase.table("user_profiles").select("*").eq("user_id", user["id"]).execute()
+        response = supabase.table("user_profiles").select("*").eq("user_id", user["user_id"]).execute()
 
         if response.data and len(response.data) > 0:
             return response.data[0]
         else:
             # Return empty profile if doesn't exist
             return {
-                "user_id": user["id"],
+                "user_id": user["user_id"],
                 "name": None,
                 "gender": None,
                 "region": None,
@@ -57,7 +57,7 @@ async def update_user_profile(
     """Update user profile information"""
     try:
         update_data = profile_data.dict(exclude_unset=True)
-        update_data["user_id"] = user["id"]
+        update_data["user_id"] = user["user_id"]
         update_data["updated_at"] = datetime.now().isoformat()
 
         # Upsert (insert or update)
@@ -81,7 +81,7 @@ async def get_user_policies(
         # Get user_policies with joined policy data
         response = supabase.table("user_policies")\
             .select("*, policy:policies(id, title, description, category, region)")\
-            .eq("user_id", user["id"])\
+            .eq("user_id", user["user_id"])\
             .order("created_at", desc=True)\
             .execute()
 
@@ -98,7 +98,7 @@ async def save_policy(
     """Save a policy to user's favorites"""
     try:
         insert_data = {
-            "user_id": user["id"],
+            "user_id": user["user_id"],
             "policy_id": policy_id,
             "is_checked": False,
             "created_at": datetime.now().isoformat()
@@ -121,7 +121,7 @@ async def toggle_policy_check(
     try:
         response = supabase.table("user_policies")\
             .update({"is_checked": is_checked})\
-            .eq("user_id", user["id"])\
+            .eq("user_id", user["user_id"])\
             .eq("policy_id", policy_id)\
             .execute()
 
@@ -139,7 +139,7 @@ async def remove_policy(
     try:
         response = supabase.table("user_policies")\
             .delete()\
-            .eq("user_id", user["id"])\
+            .eq("user_id", user["user_id"])\
             .eq("policy_id", policy_id)\
             .execute()
 
@@ -161,14 +161,14 @@ async def get_dashboard_stats(
         # Count total saved policies
         saved_policies = supabase.table("user_policies")\
             .select("*", count="exact")\
-            .eq("user_id", user["id"])\
+            .eq("user_id", user["user_id"])\
             .execute()
         total_saved = saved_policies.count or 0
 
         # Count checked (applied) policies
         applied_policies = supabase.table("user_policies")\
             .select("*", count="exact")\
-            .eq("user_id", user["id"])\
+            .eq("user_id", user["user_id"])\
             .eq("is_checked", True)\
             .execute()
         total_applied = applied_policies.count or 0
@@ -176,7 +176,7 @@ async def get_dashboard_stats(
         # Count AI consultations (conversations)
         conversations = supabase.table("conversations")\
             .select("*", count="exact")\
-            .eq("user_id", user["id"])\
+            .eq("user_id", user["user_id"])\
             .execute()
         total_consultations = conversations.count or 0
 
@@ -204,14 +204,14 @@ async def get_user_settings(
 ):
     """Get user settings"""
     try:
-        response = supabase.table("user_settings").select("*").eq("user_id", user["id"]).execute()
+        response = supabase.table("user_settings").select("*").eq("user_id", user["user_id"]).execute()
 
         if response.data and len(response.data) > 0:
             return response.data[0]
         else:
             # Return default settings if doesn't exist
             return {
-                "user_id": user["id"],
+                "user_id": user["user_id"],
                 "notify_policy": True,
                 "notify_event": True,
                 "language": "ko",
@@ -228,7 +228,7 @@ async def update_user_settings(
 ):
     """Update user settings"""
     try:
-        settings_data["user_id"] = user["id"]
+        settings_data["user_id"] = user["user_id"]
 
         # Upsert settings
         response = supabase.table("user_settings").upsert(settings_data).execute()

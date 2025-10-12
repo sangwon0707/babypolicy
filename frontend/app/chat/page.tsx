@@ -13,6 +13,10 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   sources?: Array<{ doc_id: string; content: string; score: number }>;
+  function_call?: {
+    name: string;
+    arguments: any;
+  };
 }
 
 interface Conversation {
@@ -41,6 +45,7 @@ export default function ChatPage() {
   const [hoveredConvId, setHoveredConvId] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+  const [executingFunction, setExecutingFunction] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Redirect to login if not authenticated
@@ -78,6 +83,7 @@ export default function ChatPage() {
         role: msg.role,
         content: msg.content,
         sources: msg.rag_sources || undefined,
+        function_call: msg.function_call || undefined,
       }));
 
       setMessages(formattedMessages);
@@ -166,6 +172,7 @@ export default function ChatPage() {
         role: "assistant",
         content: response.answer,
         sources: response.sources,
+        function_call: response.function_call,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -192,6 +199,35 @@ export default function ChatPage() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleExecuteFunction = async (messageId: string, functionName: string, args: any) => {
+    setExecutingFunction(messageId);
+    try {
+      if (!token) {
+        throw new Error("로그인이 필요합니다.");
+      }
+
+      const result = await chatApi.executeFunction(functionName, args, conversationId, token);
+
+      // Add a success message
+      const successMessage: Message = {
+        id: Date.now().toString() + "-success",
+        role: "assistant",
+        content: result.message || "작업이 완료되었습니다.",
+      };
+
+      setMessages((prev) => [...prev, successMessage]);
+    } catch (error: any) {
+      const errorMessage: Message = {
+        id: Date.now().toString() + "-error",
+        role: "assistant",
+        content: `오류가 발생했습니다: ${error.message || "알 수 없는 오류"}`,
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setExecutingFunction(null);
     }
   };
 
@@ -446,6 +482,53 @@ export default function ChatPage() {
                       <p className="text-gray-600 line-clamp-2 mt-1">{source.content}</p>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {message.function_call && message.role === "assistant" && (
+                <div className="mt-3 pt-3 border-t border-pink-200">
+                  <p className="text-xs font-semibold text-purple-600 mb-2">
+                    📅 캘린더 일정 제안
+                  </p>
+                  <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-3 rounded-lg border border-purple-200">
+                    <p className="text-xs font-medium text-gray-700 mb-1">
+                      {message.function_call.arguments.title}
+                    </p>
+                    {message.function_call.arguments.date && (
+                      <p className="text-xs text-gray-600 mb-2">
+                        📆 {new Date(message.function_call.arguments.date).toLocaleString("ko-KR", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    )}
+                    {message.function_call.arguments.description && (
+                      <p className="text-xs text-gray-600 mb-2">
+                        {message.function_call.arguments.description}
+                      </p>
+                    )}
+                    <button
+                      onClick={() => handleExecuteFunction(
+                        message.id,
+                        message.function_call!.name,
+                        message.function_call!.arguments
+                      )}
+                      disabled={executingFunction === message.id}
+                      className="w-full mt-2 px-3 py-2 bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-white text-xs font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {executingFunction === message.id ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          추가 중...
+                        </span>
+                      ) : (
+                        "✅ 캘린더에 추가"
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

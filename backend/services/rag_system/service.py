@@ -22,7 +22,11 @@ SYSTEM_PROMPT = (
     "제공된 문맥을 꼼꼼히 읽고 질문에 직접 답하며, 문맥에서 찾은 지원 내용·금액·조건을 명확히 요약하세요. "
     "문서 이름과 페이지를 괄호로 인용해 근거를 제시하고, 문맥이 완전히 비어 있거나 관련 정보가 전혀 없을 때만 '정보를 찾을 수 없습니다.'라고 답하세요. "
     "추측이나 문맥 밖 정보는 추가하지 말고, 질문과 연관된 내용을 우선적으로 설명하세요."
-    "please, answer in English if the question is in English"
+    "\n\n중요: 사용자 질문에 구체적인 날짜(예: 2025년 12월 25일)가 포함되어 있으면, 반드시 다음 두 가지를 모두 수행하세요:"
+    "\n1. 먼저 사용자의 질문에 대한 상세한 답변을 제공하세요 (정책 정보, 혜택 등)"
+    "\n2. 그 후 add_calendar_event 함수를 호출하여 해당 날짜를 캘린더 일정으로 제안하세요."
+    "\n답변 없이 function call만 하지 마세요. 반드시 답변과 function call을 함께 제공하세요."
+    "\n\n반드시 모든 답변은 한국어로만 작성하세요."
     # "Detect my language and always answer in that language."
     #     """You are a Retrieval-Augmented assistant with access to a vector database tool called 'policy_chunks'. From now on, ALWAYS respond in the same language the user uses.
     #     - If the user writes in English, answer in English.
@@ -164,6 +168,7 @@ class RagService:
         *,
         top_k: int = 50,
         conversation_history: Optional[List[dict]] = None,
+        enable_function_calling: bool = True,
     ) -> dict:
         if not question.strip():
             raise ValueError("Question must not be empty")
@@ -187,8 +192,45 @@ class RagService:
         sections, context_text = self._build_context(ranked_for_answer)
         messages = self._build_prompt(question, context_text, conversation_history)
 
+        # Define calendar function tool
+        tools = None
+        if enable_function_calling:
+            tools = [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "add_calendar_event",
+                        "description": "사용자가 언급한 특정 날짜(예: 출산 예정일, 신청 마감일, 검진 일정 등)를 캘린더에 자동으로 추가합니다. 사용자 질문에 구체적인 날짜(YYYY년 MM월 DD일 형식)가 포함되어 있으면 반드시 이 함수를 호출하여 일정을 제안하세요.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "title": {
+                                    "type": "string",
+                                    "description": "일정 제목 (예: '첫만남이용권 신청 마감', '출산 예정일')"
+                                },
+                                "date": {
+                                    "type": "string",
+                                    "description": "일정 날짜 (ISO 8601 형식: YYYY-MM-DDTHH:MM:SS)"
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "description": "일정에 대한 상세 설명 (선택사항)"
+                                }
+                            },
+                            "required": ["title", "date"]
+                        }
+                    }
+                }
+            ]
+
         start = perf_counter()
-        answer = self._chat_client.complete(messages)
+        # Detect if question contains a date to force tool usage
+        import re
+        has_date = bool(re.search(r'\d{4}년\s*\d{1,2}월\s*\d{1,2}일|\d{4}-\d{1,2}-\d{1,2}', question))
+        tool_choice = "required" if (tools and has_date) else None
+        print(f"[DEBUG Service] Question has date: {has_date}, tool_choice: {tool_choice}")
+
+        response = self._chat_client.complete(messages, tools=tools, tool_choice=tool_choice)
         latency = perf_counter() - start
 
         sources = [
@@ -201,8 +243,29 @@ class RagService:
             for item in ranked_for_answer
         ]
 
+        # Handle function call response
+        if isinstance(response, dict) and "function_call" in response:
+            # If GPT didn't provide a text answer, create a helpful fallback
+            answer_text = response.get("content", "").strip()
+            if not answer_text:
+                # Extract info from function call for a better message
+                import json
+                func_args = response["function_call"].get("arguments", {})
+                if isinstance(func_args, str):
+                    func_args = json.loads(func_args)
+                title = func_args.get("title", "일정")
+                answer_text = f"정책 정보를 확인했습니다. '{title}' 일정을 캘린더에 추가하시겠습니까?"
+
+            return {
+                "answer": answer_text,
+                "sources": sources,
+                "latency_seconds": latency,
+                "sections": sections,
+                "function_call": response["function_call"]
+            }
+
         return {
-            "answer": answer,
+            "answer": response,
             "sources": sources,
             "latency_seconds": latency,
             "sections": sections,

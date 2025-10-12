@@ -139,6 +139,10 @@ class Comment(CommentBase):
 # Chat Schemas
 # ========================
 
+class FunctionCall(BaseModel):
+    name: str
+    arguments: dict
+
 class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[uuid.UUID] = None
@@ -153,6 +157,7 @@ class ChatResponse(BaseModel):
     answer: str
     conversation_id: uuid.UUID
     sources: List[RagSource]
+    function_call: Optional[FunctionCall] = None
 
 class Conversation(BaseModel):
     id: uuid.UUID
@@ -174,3 +179,33 @@ class Message(BaseModel):
 
     class Config:
         orm_mode = True
+
+# ========================
+# Calendar Schemas
+# ========================
+
+class CalendarEventBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+    event_date: datetime
+    is_policy_related: bool = False
+
+class CalendarEventCreate(CalendarEventBase):
+    pass
+
+class CalendarEvent(CalendarEventBase):
+    id: int
+    user_id: uuid.UUID
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+# ========================
+# Function Calling Schemas
+# ========================
+
+class ExecuteFunctionRequest(BaseModel):
+    function_name: str
+    arguments: dict
+    conversation_id: Optional[uuid.UUID] = None

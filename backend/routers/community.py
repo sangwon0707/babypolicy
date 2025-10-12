@@ -12,6 +12,14 @@ router = APIRouter()
 def get_categories(supabase: Client = Depends(get_supabase)):
     return crud.get_categories(supabase)
 
+@router.get("/posts/popular")
+def get_popular_posts(
+    limit: int = 2,
+    supabase: Client = Depends(get_supabase)
+):
+    """Get most popular posts by views count."""
+    return crud.get_popular_posts(supabase, limit=limit)
+
 @router.get("/posts")
 def get_posts(
     skip: int = 0,

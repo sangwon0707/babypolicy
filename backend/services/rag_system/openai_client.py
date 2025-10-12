@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, List, Sequence
+from typing import Iterable, List, Sequence, Optional, Any
 
 from openai import OpenAI
 
@@ -59,17 +59,56 @@ class OpenAIEmbeddingClient:
 
 
 class OpenAIChatClient:
-    """Thin wrapper around the OpenAI chat completion API."""
+    """Thin wrapper around the OpenAI chat completion API with Function Calling support."""
 
     def __init__(self, api_key: str, model: str) -> None:
         self._client = OpenAI(api_key=api_key)
         self._model = model
 
-    def complete(self, messages: Iterable[dict], *, temperature: float = 0.0) -> str:
-        response = self._client.chat.completions.create(
-            model=self._model,
-            messages=list(messages),
-            temperature=temperature,
-        )
+    def complete(
+        self,
+        messages: Iterable[dict],
+        *,
+        temperature: float = 0.0,
+        tools: Optional[List[dict]] = None,
+        tool_choice: Optional[str | dict] = None
+    ) -> str | dict:
+        """
+        Complete a chat conversation.
+
+        Returns:
+            - str: If no function call, returns the text response
+            - dict: If function call detected, returns {'function_call': {...}, 'content': str}
+        """
+        kwargs = {
+            "model": self._model,
+            "messages": list(messages),
+            "temperature": temperature,
+        }
+
+        if tools:
+            kwargs["tools"] = tools
+            # Use provided tool_choice or default to "required" to force function calling
+            kwargs["tool_choice"] = tool_choice if tool_choice is not None else "required"
+            print(f"[DEBUG OpenAI] Sending tools to OpenAI: {tools}")
+            print(f"[DEBUG OpenAI] Model: {self._model}")
+            print(f"[DEBUG OpenAI] tool_choice: {kwargs['tool_choice']}")
+
+        response = self._client.chat.completions.create(**kwargs)
         message = response.choices[0].message
+
+        print(f"[DEBUG OpenAI] Response message.content: {message.content[:100] if message.content else 'None'}")
+        print(f"[DEBUG OpenAI] Response message.tool_calls: {message.tool_calls}")
+
+        # Check for function/tool calls
+        if message.tool_calls:
+            tool_call = message.tool_calls[0]
+            return {
+                "function_call": {
+                    "name": tool_call.function.name,
+                    "arguments": tool_call.function.arguments
+                },
+                "content": message.content or ""
+            }
+
         return message.content or ""

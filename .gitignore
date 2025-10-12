@@ -98,6 +98,8 @@ frontend/.env.production.local
 # Documentation (local only)
 TEST_CREDENTIALS.md
 WORK_SUMMARY.md
+FUNCTION_CALLING_GUIDE.md
+TECH_STACK_PRESENTATION.md
 
 # OS
 .DS_Store

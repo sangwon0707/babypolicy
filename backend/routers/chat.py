@@ -1,5 +1,7 @@
 import uuid
+import json
 from typing import List
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
@@ -55,8 +57,14 @@ def chat_with_rag(
     chat_service = get_chat_service(supabase=supabase)
     service_response = chat_service.answer(
         request.message,
-        conversation_history=conversation_history
+        conversation_history=conversation_history,
+        enable_function_calling=True  # Explicitly enable function calling
     )
+
+    # Debug logging
+    print(f"[DEBUG] Service response keys: {service_response.keys()}")
+    if "function_call" in service_response:
+        print(f"[DEBUG] Function call detected: {service_response['function_call']}")
 
     sources = [
         schemas.RagSource(
@@ -68,10 +76,22 @@ def chat_with_rag(
         for source in service_response.get("sources", [])
     ]
 
+    # Handle function call if present
+    function_call = None
+    if "function_call" in service_response:
+        fc = service_response["function_call"]
+        print(f"[DEBUG] Processing function_call: name={fc['name']}, arguments={fc['arguments']}")
+        function_call = schemas.FunctionCall(
+            name=fc["name"],
+            arguments=json.loads(fc["arguments"]) if isinstance(fc["arguments"], str) else fc["arguments"]
+        )
+        print(f"[DEBUG] Created FunctionCall schema: {function_call}")
+
     rag_response = schemas.ChatResponse(
         answer=service_response.get("answer", ""),
         conversation_id=request.conversation_id or uuid.uuid4(),
         sources=sources,
+        function_call=function_call
     )
 
     # Save AI message
@@ -145,3 +165,59 @@ def delete_conversation(
     supabase.table("conversations").delete().eq("id", conversation_id).execute()
 
     return {"message": "Conversation deleted successfully"}
+
+@router.post("/chat/execute-function")
+def execute_function(
+    request: schemas.ExecuteFunctionRequest,
+    supabase: Client = Depends(get_supabase),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Execute a function call approved by the user.
+    Currently supports: add_calendar_event
+    """
+    user_id = current_user["user_id"]
+
+    if request.function_name == "add_calendar_event":
+        try:
+            # Parse arguments
+            args = request.arguments
+            title = args.get("title")
+            date_str = args.get("date")
+            description = args.get("description", "")
+
+            if not title or not date_str:
+                raise HTTPException(status_code=400, detail="Missing required arguments: title and date")
+
+            # Parse datetime
+            try:
+                event_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date format. Use ISO 8601 format (YYYY-MM-DDTHH:MM:SS)")
+
+            # Create calendar event
+            event = schemas.CalendarEventCreate(
+                title=title,
+                description=description,
+                event_date=event_date,
+                is_policy_related=True
+            )
+
+            result = crud.create_calendar_event(supabase, event, user_id)
+
+            if not result:
+                raise HTTPException(status_code=500, detail="Failed to create calendar event")
+
+            return {
+                "status": "success",
+                "message": f"✅ '{title}' 일정이 캘린더에 추가되었습니다.",
+                "event": result
+            }
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to execute function: {str(e)}")
+
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown function: {request.function_name}")

@@ -56,6 +56,11 @@ def create_policy_chunks(supabase: Client, chunks: list[schemas.PolicyChunkCreat
     response = supabase.table("policy_chunks").insert(chunks_data).execute()
     return response.data if response.data else []
 
+def get_policies(supabase: Client, limit: int = 10):
+    """Get policies for display."""
+    response = supabase.table("policies").select("*").limit(limit).execute()
+    return response.data if response.data else []
+
 def search_relevant_chunks(supabase: Client, query_embedding: list[float], top_k: int = 5):
     """
     Performs vector similarity search on policy_chunks table.
@@ -84,7 +89,7 @@ def create_conversation(supabase: Client, user_id: str, title: str = "New Conver
 
 def create_message(supabase: Client, conversation_id: str, role: str, content: str, rag_sources: dict = None):
     message_data = {
-        "conversation_id": conversation_id,
+        "conversation_id": str(conversation_id),  # Ensure UUID is converted to string
         "role": role,
         "content": content,
         "rag_sources": rag_sources
@@ -94,7 +99,7 @@ def create_message(supabase: Client, conversation_id: str, role: str, content: s
     # Update conversation's last_message_at
     supabase.table("conversations").update({
         "last_message_at": datetime.now().isoformat()
-    }).eq("id", conversation_id).execute()
+    }).eq("id", str(conversation_id)).execute()  # Ensure UUID is converted to string
 
     return response.data[0] if response.data else None
 
@@ -242,3 +247,59 @@ def check_post_liked(supabase: Client, post_id: str, user_id: str):
     """Check if user has liked a post."""
     response = supabase.table("post_likes").select("*").eq("post_id", post_id).eq("user_id", user_id).execute()
     return len(response.data) > 0 if response.data else False
+
+def get_popular_posts(supabase: Client, limit: int = 2):
+    """Get most popular posts by views count."""
+    query = supabase.table("posts").select("*, author:users(id, email, user_profiles(name))").order("views_count", desc=True).limit(limit)
+    response = query.execute()
+
+    # Transform nested user_profiles.name to author.name for frontend
+    if response.data:
+        for post in response.data:
+            if post.get("author") and post["author"].get("user_profiles"):
+                profiles = post["author"]["user_profiles"]
+                # Handle both single object and array of profiles
+                if isinstance(profiles, list) and len(profiles) > 0:
+                    post["author"]["name"] = profiles[0].get("name")
+                elif isinstance(profiles, dict):
+                    post["author"]["name"] = profiles.get("name")
+
+    return response.data if response.data else []
+
+# =======================
+# Calendar CRUD
+# =======================
+
+def create_calendar_event(supabase: Client, event: schemas.CalendarEventCreate, user_id: str):
+    """Create a new calendar event for the user."""
+    event_data = {
+        **event.dict(),
+        "user_id": user_id,
+        "event_date": event.event_date.isoformat()
+    }
+    response = supabase.table("calendar_events").insert(event_data).execute()
+    return response.data[0] if response.data else None
+
+def get_user_calendar_events(supabase: Client, user_id: str, limit: int = 100):
+    """Get all calendar events for a user, ordered by event date."""
+    response = supabase.table("calendar_events").select("*").eq("user_id", user_id).order("event_date", desc=False).limit(limit).execute()
+    return response.data if response.data else []
+
+def get_calendar_event(supabase: Client, event_id: int, user_id: str):
+    """Get a specific calendar event (ensure it belongs to the user)."""
+    response = supabase.table("calendar_events").select("*").eq("id", event_id).eq("user_id", user_id).execute()
+    return response.data[0] if response.data else None
+
+def delete_calendar_event(supabase: Client, event_id: int, user_id: str):
+    """Delete a calendar event (ensure it belongs to the user)."""
+    response = supabase.table("calendar_events").delete().eq("id", event_id).eq("user_id", user_id).execute()
+    return response.data[0] if response.data else None
+
+def update_calendar_event(supabase: Client, event_id: int, user_id: str, event: schemas.CalendarEventCreate):
+    """Update a calendar event (ensure it belongs to the user)."""
+    event_data = {
+        **event.dict(),
+        "event_date": event.event_date.isoformat()
+    }
+    response = supabase.table("calendar_events").update(event_data).eq("id", event_id).eq("user_id", user_id).execute()
+    return response.data[0] if response.data else None

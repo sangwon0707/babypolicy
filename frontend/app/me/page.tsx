@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { User, Settings, Heart, MessageSquare, LogOut, Target, CheckCircle2, Clock, MessageCircle, Bell } from "lucide-react";
+import { User, Settings, Heart, MessageSquare, LogOut, Target, CheckCircle2, Clock, MessageCircle, Bell, Calendar, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
+import { calendarApi } from "@/lib/api";
 
 interface DashboardStats {
   recommended_policies: number;
@@ -14,7 +15,7 @@ interface DashboardStats {
 }
 
 export default function MePage() {
-  const { user, logout, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, token, logout, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
 
   // Real stats from API
@@ -26,12 +27,9 @@ export default function MePage() {
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
-  // Mock data for features not yet in backend
-  const mockDeadlines = [
-    { id: 1, title: "출산지원금 신청", dDay: 7, category: "출산" },
-    { id: 2, title: "육아휴직 급여 신청", dDay: 14, category: "휴직" },
-    { id: 3, title: "양육수당 재신청", dDay: 21, category: "수당" },
-  ];
+  // Calendar events from API
+  const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
 
   const mockChecklist = [
     { id: 1, title: "산후조리원 예약", completed: true, progress: 100 },
@@ -46,12 +44,11 @@ export default function MePage() {
       if (!isAuthenticated) return;
 
       try {
-        const token = localStorage.getItem("token");
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/user/dashboard/stats`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: token ? `Bearer ${token}` : "",
             },
           }
         );
@@ -68,7 +65,48 @@ export default function MePage() {
     };
 
     fetchStats();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, token]);
+
+  // Fetch calendar events
+  useEffect(() => {
+    const fetchCalendarEvents = async () => {
+      if (!isAuthenticated) return;
+
+      try {
+        if (token) {
+          const events = await calendarApi.getEvents(token);
+          setCalendarEvents(events);
+        }
+      } catch (error) {
+        console.error("Failed to fetch calendar events:", error);
+      } finally {
+        setEventsLoading(false);
+      }
+    };
+
+    fetchCalendarEvents();
+  }, [isAuthenticated, token]);
+
+  // Handle event deletion
+  const handleDeleteEvent = async (eventId: number) => {
+    try {
+      if (token) {
+        await calendarApi.deleteEvent(eventId, token);
+        setCalendarEvents(prev => prev.filter(event => event.id !== eventId));
+      }
+    } catch (error) {
+      console.error("Failed to delete event:", error);
+    }
+  };
+
+  // Calculate days until event
+  const getDaysUntil = (eventDate: string) => {
+    const now = new Date();
+    const event = new Date(eventDate);
+    const diffTime = event.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
   const handleLogout = () => {
     logout();
@@ -181,30 +219,89 @@ export default function MePage() {
         </div>
       </div>
 
-      {/* Upcoming Deadlines */}
+      {/* Calendar Events */}
       <div className="px-6 mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <Bell className="w-5 h-5 text-orange-500" />
-          <h2 className="text-lg font-bold text-gray-900">놓치면 안 되는 마감일</h2>
-        </div>
-        <div className="space-y-2">
-          {mockDeadlines.map((deadline) => (
-            <div
-              key={deadline.id}
-              className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-3"
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-purple-500" />
+            <h2 className="text-lg font-bold text-gray-900">나의 캘린더 일정</h2>
+          </div>
+          {calendarEvents.length > 0 && (
+            <button
+              onClick={() => router.push('/me/calendar')}
+              className="text-xs font-medium text-purple-600 hover:text-purple-700"
             >
-              <div className="flex-shrink-0">
-                <div className="bg-gradient-to-br from-orange-400 to-red-400 text-white rounded-xl px-3 py-2 text-center min-w-[60px]">
-                  <p className="text-xs font-medium">D-{deadline.dDay}</p>
-                </div>
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900">{deadline.title}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{deadline.category}</p>
-              </div>
-            </div>
-          ))}
+              더보기
+            </button>
+          )}
         </div>
+        {eventsLoading ? (
+          <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
+            <div className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-500">일정 불러오는 중...</p>
+          </div>
+        ) : (() => {
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const futureEvents = [...calendarEvents]
+            .filter(e => new Date(e.event_date) >= todayStart)
+            .sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime());
+          const upcomingThree = futureEvents.slice(0, 3);
+          return upcomingThree.length === 0 ? (
+          <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
+            <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm text-gray-500 mb-1">등록된 일정이 없습니다</p>
+            <p className="text-xs text-gray-400">AI 채팅에서 일정을 추가해보세요!</p>
+          </div>
+          ) : (
+          <div className="space-y-2">
+            {upcomingThree.map((event) => {
+              const daysUntil = getDaysUntil(event.event_date);
+              const isPast = daysUntil < 0;
+              const isToday = daysUntil === 0;
+
+              return (
+                <div
+                  key={event.id}
+                  className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-3 group"
+                >
+                  <div className="flex-shrink-0">
+                    <div className={`text-white rounded-xl px-3 py-2 text-center min-w-[60px] ${
+                      isPast ? 'bg-gray-400' :
+                      isToday ? 'bg-gradient-to-br from-green-400 to-emerald-400' :
+                      'bg-gradient-to-br from-purple-400 to-pink-400'
+                    }`}>
+                      <p className="text-xs font-medium">
+                        {isPast ? `D+${Math.abs(daysUntil)}` : isToday ? 'D-Day' : `D-${daysUntil}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{event.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {new Date(event.event_date).toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                    {event.description && (
+                      <p className="text-xs text-gray-400 mt-1 line-clamp-1">{event.description}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleDeleteEvent(event.id)}
+                    className="flex-shrink-0 p-2 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                    aria-label="일정 삭제"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          );
+        })()}
       </div>
 
       {/* Policy Checklist */}

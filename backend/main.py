@@ -8,6 +8,8 @@ from .routers.chat import router as chat_router
 from .routers.admin import router as admin_router
 from .routers.community import router as community_router
 from .routers.user import router as user_router
+from .routers.calendar import router as calendar_router
+from .routers.policy import router as policy_router
 
 # Load environment variables from root .env
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
@@ -24,6 +26,7 @@ origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://172.16.30.177:3000",
+    "http://192.168.1.235:3000",
 ]
 
 app.add_middleware(
@@ -40,6 +43,8 @@ app.include_router(chat_router, prefix="/api", tags=["Chat"])
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
 app.include_router(community_router, prefix="/api/community", tags=["Community"])
 app.include_router(user_router, prefix="/api/user", tags=["User"])
+app.include_router(calendar_router, prefix="/api/calendar", tags=["Calendar"])
+app.include_router(policy_router, prefix="/api", tags=["Policy"])
 
 
 @app.get("/")
