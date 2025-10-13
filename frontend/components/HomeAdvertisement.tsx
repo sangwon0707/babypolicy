@@ -18,7 +18,7 @@ interface Ad {
 const advertisements: Ad[] = [
   {
     id: 1,
-    image: "/advertisement/bee-head-cushion.jpg",
+    image: "/advertisement/bee-head-cushion.png",
     title: "꿀벌 머리쿵 쿠션",
     originalPrice: 25900,
     discountRate: 38,
@@ -29,7 +29,7 @@ const advertisements: Ad[] = [
   },
   {
     id: 2,
-    image: "/advertisement/bottle-sterilizer.jpg",
+    image: "/advertisement/bottle-sterilizer.png",
     title: "UV 젖병 소독기",
     originalPrice: 89000,
     discountRate: 45,
@@ -40,7 +40,7 @@ const advertisements: Ad[] = [
   },
   {
     id: 3,
-    image: "/advertisement/baby-bib.jpg",
+    image: "/advertisement/baby-bib.png",
     title: "실리콘 아기 턱받이",
     originalPrice: 18900,
     discountRate: 32,
@@ -51,7 +51,7 @@ const advertisements: Ad[] = [
   },
   {
     id: 4,
-    image: "/advertisement/baby-lotion.jpg",
+    image: "/advertisement/baby-lotion.png",
     title: "아기 촉촉 수분로션",
     originalPrice: 45000,
     discountRate: 28,
