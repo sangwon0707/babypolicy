@@ -18,7 +18,7 @@ interface Ad {
 const advertisements: Ad[] = [
   {
     id: 1,
-    image: "/advertisement/꿀벌머리쿵쿠션.jpg",
+    image: "/advertisement/bee-head-cushion.jpg",
     title: "꿀벌 머리쿵 쿠션",
     originalPrice: 25900,
     discountRate: 38,
@@ -29,7 +29,7 @@ const advertisements: Ad[] = [
   },
   {
     id: 2,
-    image: "/advertisement/젖병소독기.jpg",
+    image: "/advertisement/bottle-sterilizer.jpg",
     title: "UV 젖병 소독기",
     originalPrice: 89000,
     discountRate: 45,
@@ -40,7 +40,7 @@ const advertisements: Ad[] = [
   },
   {
     id: 3,
-    image: "/advertisement/아기턱받이.jpg",
+    image: "/advertisement/baby-bib.jpg",
     title: "실리콘 아기 턱받이",
     originalPrice: 18900,
     discountRate: 32,
@@ -51,8 +51,8 @@ const advertisements: Ad[] = [
   },
   {
     id: 4,
-    image: "/advertisement/하기스기저귀.jpg",
-    title: "하기스 기저귀 대용량",
+    image: "/advertisement/baby-lotion.jpg",
+    title: "아기 촉촉 수분로션",
     originalPrice: 45000,
     discountRate: 28,
     finalPrice: 32400,
@@ -86,19 +86,19 @@ export default function HomeAdvertisement() {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-orange-100 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">🎁</span>
-          <h3 className="text-sm font-bold text-gray-800">육아 필수템 특가</h3>
+      <div className="px-3 py-2 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-orange-100 flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm">🎁</span>
+          <h3 className="text-xs font-bold text-gray-800">육아 필수템 특가</h3>
         </div>
-        <span className="text-xs text-gray-500">AD</span>
+        <span className="text-[10px] text-gray-500">AD</span>
       </div>
 
       {/* Ad Content */}
       <div className="relative">
-        <div className="flex items-center">
+        <div className="flex items-center justify-center p-4">
           {/* Image Section */}
-          <div className="w-1/3 relative bg-gray-50">
+          <div className="w-1/3 relative bg-gray-50 rounded-lg overflow-hidden">
             <div className="aspect-square relative">
               <Image
                 src={currentAd.image}
@@ -111,9 +111,9 @@ export default function HomeAdvertisement() {
           </div>
 
           {/* Info Section */}
-          <div className="w-2/3 p-3">
+          <div className="w-2/3 pl-4 flex flex-col justify-center">
             {currentAd.badge && (
-              <span className="inline-block px-2 py-0.5 bg-blue-500 text-white text-xs font-bold rounded mb-2">
+              <span className="inline-block px-2 py-0.5 bg-blue-500 text-white text-xs font-bold rounded mb-2 w-fit">
                 🚀 {currentAd.badge}
               </span>
             )}

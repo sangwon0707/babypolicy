@@ -78,7 +78,7 @@ def chat_with_rag(
 
     # Handle function call if present
     function_call = None
-    if "function_call" in service_response:
+    if "function_call" in service_response and service_response["function_call"] is not None:
         fc = service_response["function_call"]
         print(f"[DEBUG] Processing function_call: name={fc['name']}, arguments={fc['arguments']}")
         function_call = schemas.FunctionCall(

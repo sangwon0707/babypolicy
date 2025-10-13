@@ -18,14 +18,14 @@ export default function MePage() {
   const { user, token, logout, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  // Real stats from API
+  // Mock stats for demo (looks more realistic than zeros)
   const [stats, setStats] = useState<DashboardStats>({
-    recommended_policies: 0,
-    applied_policies: 0,
-    upcoming_deadlines: 0,
-    ai_consultations: 0,
+    recommended_policies: 12,
+    applied_policies: 3,
+    upcoming_deadlines: 2,
+    ai_consultations: 64,
   });
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   // Calendar events from API
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
@@ -38,33 +38,10 @@ export default function MePage() {
     { id: 4, title: "건강보험 출산급여", completed: false, progress: 30 },
   ];
 
-  // Fetch dashboard stats
+  // Fetch dashboard stats - DISABLED for demo with mock data
   useEffect(() => {
-    const fetchStats = async () => {
-      if (!isAuthenticated) return;
-
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/user/dashboard/stats`,
-          {
-            headers: {
-              Authorization: token ? `Bearer ${token}` : "",
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch dashboard stats:", error);
-      } finally {
-        setStatsLoading(false);
-      }
-    };
-
-    fetchStats();
+    // Skip API call and use mock data for demo
+    setStatsLoading(false);
   }, [isAuthenticated, token]);
 
   // Fetch calendar events
@@ -177,7 +154,10 @@ export default function MePage() {
       {/* Statistics Cards */}
       <div className="px-6 -mt-4 mb-6">
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <button
+            onClick={() => router.push("/me/interest-policies")}
+            className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-pink-200 hover:shadow-md transition-all text-left"
+          >
             <div className="flex items-center gap-2 mb-2">
               <Target className="w-5 h-5 text-pink-500" />
               <p className="text-xs text-gray-500">관심 정책</p>
@@ -185,9 +165,12 @@ export default function MePage() {
             <p className="text-3xl font-bold text-gray-900">
               {statsLoading ? "-" : stats.recommended_policies}
             </p>
-          </div>
+          </button>
 
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <button
+            onClick={() => router.push("/me/applied-policies")}
+            className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-purple-200 hover:shadow-md transition-all text-left"
+          >
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle2 className="w-5 h-5 text-purple-500" />
               <p className="text-xs text-gray-500">신청 완료</p>
@@ -195,9 +178,12 @@ export default function MePage() {
             <p className="text-3xl font-bold text-gray-900">
               {statsLoading ? "-" : stats.applied_policies}
             </p>
-          </div>
+          </button>
 
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <button
+            onClick={() => router.push("/me/upcoming-deadlines")}
+            className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-orange-200 hover:shadow-md transition-all text-left"
+          >
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-5 h-5 text-orange-500" />
               <p className="text-xs text-gray-500">다가오는 마감일</p>
@@ -205,9 +191,12 @@ export default function MePage() {
             <p className="text-3xl font-bold text-gray-900">
               {statsLoading ? "-" : stats.upcoming_deadlines}
             </p>
-          </div>
+          </button>
 
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <button
+            onClick={() => router.push("/chat")}
+            className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all text-left"
+          >
             <div className="flex items-center gap-2 mb-2">
               <MessageCircle className="w-5 h-5 text-blue-500" />
               <p className="text-xs text-gray-500">AI 상담</p>
@@ -215,7 +204,7 @@ export default function MePage() {
             <p className="text-3xl font-bold text-gray-900">
               {statsLoading ? "-" : stats.ai_consultations}
             </p>
-          </div>
+          </button>
         </div>
       </div>
 

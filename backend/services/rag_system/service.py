@@ -153,6 +153,11 @@ class RagService:
 
         query_embedding = self._embedding_client.embed([question])[0]
         ranked = self._vector_store.top_k(query_embedding, k=top_k)
+        print(
+            "[DEBUG Retrieval] "
+            f"{len(ranked)} hits; "
+            f"scores={[item.score for item in ranked[:3]]}"
+        )
         ranked_for_answer = ranked
 
         if self._reranker is not None and ranked:
@@ -182,20 +187,20 @@ class RagService:
                             "properties": {
                                 "title": {
                                     "type": "string",
-                                    "description": "일정 제목 (예: '첫만남이용권 신청 마감', '출산 예정일')"
+                                    "description": "일정 제목 (예: '첫만남이용권 신청 마감', '출산 예정일')",
                                 },
                                 "date": {
                                     "type": "string",
-                                    "description": "일정 날짜 (ISO 8601 형식: YYYY-MM-DDTHH:MM:SS)"
+                                    "description": "일정 날짜 (ISO 8601 형식: YYYY-MM-DDTHH:MM:SS)",
                                 },
                                 "description": {
                                     "type": "string",
-                                    "description": "일정에 대한 상세 설명 (선택사항)"
-                                }
+                                    "description": "일정에 대한 상세 설명 (선택사항)",
+                                },
                             },
-                            "required": ["title", "date"]
-                        }
-                    }
+                            "required": ["title", "date"],
+                        },
+                    },
                 }
             ]
 
@@ -203,9 +208,13 @@ class RagService:
         # Use "auto" to let GPT decide whether to call functions while still providing an answer
         # The system prompt instructs GPT to provide BOTH answer and function call when needed
         tool_choice = "auto" if tools else None
-        print(f"[DEBUG Service] tools enabled: {bool(tools)}, tool_choice: {tool_choice}")
+        print(
+            f"[DEBUG Service] tools enabled: {bool(tools)}, tool_choice: {tool_choice}"
+        )
 
-        response = self._chat_client.complete(messages, tools=tools, tool_choice=tool_choice)
+        response = self._chat_client.complete(
+            messages, tools=tools, tool_choice=tool_choice
+        )
         latency = perf_counter() - start
 
         sources = [
@@ -242,7 +251,9 @@ class RagService:
             def next_9am(dt: datetime) -> datetime:
                 candidate = dt.replace(hour=9, minute=0, second=0, microsecond=0)
                 if candidate <= dt:
-                    candidate = (dt + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
+                    candidate = (dt + timedelta(days=1)).replace(
+                        hour=9, minute=0, second=0, microsecond=0
+                    )
                 return candidate
 
             func_call = response["function_call"] or {}
@@ -259,7 +270,9 @@ class RagService:
 
             # Detect 'always-available' from sources or title
             always_keywords = ["상시", "연중", "수시", "항시"]
-            sources_text = "\n".join(item["text"] for item in sources[:5]) if sources else ""
+            sources_text = (
+                "\n".join(item["text"] for item in sources[:5]) if sources else ""
+            )
             is_always = any(kw in sources_text for kw in always_keywords) or any(
                 kw in proposed_title for kw in always_keywords
             )
@@ -279,10 +292,12 @@ class RagService:
                     sanitized_fc = {
                         "name": func_call.get("name", "add_calendar_event"),
                         "arguments": {
-                            "title": proposed_title if proposed_title else "상시 신청 알림",
+                            "title": (
+                                proposed_title if proposed_title else "상시 신청 알림"
+                            ),
                             "date": adjusted.isoformat(),
-                            "description": f"정책 관련 일정 제안 (상시/연중 문구 감지)"
-                        }
+                            "description": f"정책 관련 일정 제안 (상시/연중 문구 감지)",
+                        },
                     }
                 else:
                     # Future date is acceptable
@@ -291,12 +306,17 @@ class RagService:
                         "arguments": {
                             "title": proposed_title,
                             "date": parsed_dt.isoformat(),
-                            "description": func_args.get("description") or "정책 관련 일정 제안"
-                        }
+                            "description": func_args.get("description")
+                            or "정책 관련 일정 제안",
+                        },
                     }
             else:
                 # No date provided; if sources indicate 'always' and user showed time intent, set next 9AM
-                time_intent = bool(re.search(r"(언제|언제까지|날짜|일정|예약|시기|시한|기한)", question))
+                time_intent = bool(
+                    re.search(
+                        r"(언제|언제까지|날짜|일정|예약|시기|시한|기한)", question
+                    )
+                )
                 if is_always and time_intent:
                     adjusted = next_9am(now_local + timedelta(days=1))
                     sanitized_fc = {
@@ -304,13 +324,17 @@ class RagService:
                         "arguments": {
                             "title": "상시 신청 알림",
                             "date": adjusted.isoformat(),
-                            "description": "정책 관련 일정 제안 (상시/연중 문구 감지)"
-                        }
+                            "description": "정책 관련 일정 제안 (상시/연중 문구 감지)",
+                        },
                     }
 
             def format_korean_datetime(dt: datetime) -> str:
                 ampm = "오전" if dt.hour < 12 else "오후"
-                hour12 = dt.hour if 1 <= dt.hour <= 12 else (dt.hour - 12 if dt.hour > 12 else 12)
+                hour12 = (
+                    dt.hour
+                    if 1 <= dt.hour <= 12
+                    else (dt.hour - 12 if dt.hour > 12 else 12)
+                )
                 return f"{dt.year}년 {dt.month}월 {dt.day}일 {ampm} {hour12:02d}:{dt.minute:02d}"
 
             # Build a more helpful fallback when the model declines to answer
@@ -328,7 +352,9 @@ class RagService:
                 return f"{prefix} 아래 참고 정책을 확인해 주세요. 필요한 항목은 '문서에 명시 없음/확인 필요'로 표시됩니다."
 
             # If GPT didn't provide a text answer, or returned a too-strong refusal, craft a fallback
-            if not answer_text or answer_text.strip().startswith("정보를 찾을 수 없습니다"):
+            if not answer_text or answer_text.strip().startswith(
+                "정보를 찾을 수 없습니다"
+            ):
                 title_for_text = proposed_title or "정책 일정"
                 answer_text = build_helpful_fallback_text(title_for_text)
 
@@ -340,20 +366,36 @@ class RagService:
                     import calendar as _cal
 
                     def next_9am(dt: datetime) -> datetime:
-                        candidate = dt.replace(hour=9, minute=0, second=0, microsecond=0)
+                        candidate = dt.replace(
+                            hour=9, minute=0, second=0, microsecond=0
+                        )
                         if candidate <= dt:
-                            candidate = (dt + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
+                            candidate = (dt + timedelta(days=1)).replace(
+                                hour=9, minute=0, second=0, microsecond=0
+                            )
                         return candidate
 
                     now_local = datetime.now()
-                    time_intent = bool(re.search(r"(언제|언제까지|날짜|일정|예약|시기|시한|기한)", question))
+                    time_intent = bool(
+                        re.search(
+                            r"(언제|언제까지|날짜|일정|예약|시기|시한|기한)", question
+                        )
+                    )
 
                     # Combine top source texts
-                    sources_text = "\n".join(item["text"] for item in sources[:5]) if sources else ""
+                    sources_text = (
+                        "\n".join(item["text"] for item in sources[:5])
+                        if sources
+                        else ""
+                    )
 
                     # Quarter detection in sources
-                    q_pat1 = re.compile(r"제\s*(\d)분기\s*:\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일부터\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일까지")
-                    q_pat2 = re.compile(r"제\s*(\d)분기\s*:\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일부터\s*그\s*다음해의\s*(\d{1,2})\s*월\s*말일까지")
+                    q_pat1 = re.compile(
+                        r"제\s*(\d)분기\s*:\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일부터\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일까지"
+                    )
+                    q_pat2 = re.compile(
+                        r"제\s*(\d)분기\s*:\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일부터\s*그\s*다음해의\s*(\d{1,2})\s*월\s*말일까지"
+                    )
 
                     quarter_ends: list[datetime] = []
                     for mq in q_pat1.finditer(sources_text):
@@ -380,7 +422,9 @@ class RagService:
                             pass
 
                     if time_intent and quarter_ends:
-                        selected = min([dt for dt in quarter_ends if dt >= now_local], default=None)
+                        selected = min(
+                            [dt for dt in quarter_ends if dt >= now_local], default=None
+                        )
                         if selected is not None:
                             sanitized_fc = {
                                 "name": func_call.get("name", "add_calendar_event"),
@@ -411,15 +455,23 @@ class RagService:
 
                 # If the user asks implicitly about timing, we can be generous
                 # when accepting dates from sources (even without explicit policy keywords)
-                time_intent = bool(re.search(r"(언제|언제까지|날짜|일정|예약|시기|시한|기한)", question))
+                time_intent = bool(
+                    re.search(
+                        r"(언제|언제까지|날짜|일정|예약|시기|시한|기한)", question
+                    )
+                )
 
                 def next_9am(dt: datetime) -> datetime:
                     candidate = dt.replace(hour=9, minute=0, second=0, microsecond=0)
                     if candidate <= dt:
-                        candidate = (dt + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
+                        candidate = (dt + timedelta(days=1)).replace(
+                            hour=9, minute=0, second=0, microsecond=0
+                        )
                     return candidate
 
-                def find_policy_date_and_title(source_text: str) -> tuple[str | None, str | None, bool]:
+                def find_policy_date_and_title(
+                    source_text: str,
+                ) -> tuple[str | None, str | None, bool]:
                     # Look for Korean and ISO-like dates
                     date_patterns = [
                         r"(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일",
@@ -431,7 +483,16 @@ class RagService:
                         r"(\d{4})[\./-](\d{1,2})[\./-](\d{1,2})\s*[~\-–]\s*(\d{4})[\./-](\d{1,2})[\./-](\d{1,2})",
                     ]
                     # Policy-related keywords
-                    keywords = ["신청", "접수", "마감", "기간", "시작", "종료", "지급", "공고"]
+                    keywords = [
+                        "신청",
+                        "접수",
+                        "마감",
+                        "기간",
+                        "시작",
+                        "종료",
+                        "지급",
+                        "공고",
+                    ]
                     always_keywords = ["상시", "연중", "수시", "항시"]
                     now = datetime.now()
 
@@ -449,7 +510,11 @@ class RagService:
                             end_dt = datetime(y2, mo2, d2, 18, 0, 0)
 
                             # Choose end if still future, else start if future
-                            chosen_dt = end_dt if end_dt >= now else (start_dt if start_dt >= now else None)
+                            chosen_dt = (
+                                end_dt
+                                if end_dt >= now
+                                else (start_dt if start_dt >= now else None)
+                            )
                             if not chosen_dt:
                                 continue
 
@@ -457,7 +522,11 @@ class RagService:
                             if any(kw in window for kw in keywords):
                                 if "마감" in window or chosen_dt == end_dt:
                                     title = "신청 마감"
-                                elif "접수" in window and ("시작" in window or "개시" in window or chosen_dt == start_dt):
+                                elif "접수" in window and (
+                                    "시작" in window
+                                    or "개시" in window
+                                    or chosen_dt == start_dt
+                                ):
                                     title = "접수 시작"
                                 elif "지급" in window:
                                     title = "지급일"
@@ -485,13 +554,20 @@ class RagService:
                                 # Title heuristic with keywords nearby
                                 if "마감" in window:
                                     return dt.isoformat(), "신청 마감", False
-                                if "접수" in window and ("시작" in window or "개시" in window):
+                                if "접수" in window and (
+                                    "시작" in window or "개시" in window
+                                ):
                                     return dt.isoformat(), "접수 시작", False
                                 if "지급" in window:
                                     return dt.isoformat(), "지급일", False
                                 if "종료" in window:
                                     return dt.isoformat(), "지원 종료", False
-                                if "기간" in window or "공고" in window or "신청" in window or "접수" in window:
+                                if (
+                                    "기간" in window
+                                    or "공고" in window
+                                    or "신청" in window
+                                    or "접수" in window
+                                ):
                                     return dt.isoformat(), "정책 신청 일정", False
 
                             # If user shows time intent, accept a date even without nearby keywords
@@ -500,12 +576,21 @@ class RagService:
 
                     # No explicit date, but always-available policy in text and time intent
                     if time_intent and any(kw in source_text for kw in always_keywords):
-                        return next_9am(now + timedelta(days=1)).isoformat(), "상시 신청 알림", True
+                        return (
+                            next_9am(now + timedelta(days=1)).isoformat(),
+                            "상시 신청 알림",
+                            True,
+                        )
 
                     # Quarter schedule detection (e.g., 제1분기: 3월 1일부터 5월 31일까지 ...)
                     import calendar as _cal
-                    q_pat1 = re.compile(r"제\s*(\d)분기\s*:\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일부터\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일까지")
-                    q_pat2 = re.compile(r"제\s*(\d)분기\s*:\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일부터\s*그\s*다음해의\s*(\d{1,2})\s*월\s*말일까지")
+
+                    q_pat1 = re.compile(
+                        r"제\s*(\d)분기\s*:\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일부터\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일까지"
+                    )
+                    q_pat2 = re.compile(
+                        r"제\s*(\d)분기\s*:\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일부터\s*그\s*다음해의\s*(\d{1,2})\s*월\s*말일까지"
+                    )
 
                     quarter_ends: list[datetime] = []
                     for mq in q_pat1.finditer(source_text):
@@ -535,7 +620,9 @@ class RagService:
                             continue
 
                     if quarter_ends:
-                        selected = min([dt for dt in quarter_ends if dt >= now], default=None)
+                        selected = min(
+                            [dt for dt in quarter_ends if dt >= now], default=None
+                        )
                         if selected is not None:
                             # If user has timing intent, synthesize a quarter deadline event
                             if time_intent:
@@ -566,7 +653,9 @@ class RagService:
                         now = datetime.now()
                         if parsed < now and not chosen_always:
                             # Skip emitting function_call for past-due schedules
-                            raise RuntimeError("Detected past policy date without 'always' flag; skipping function_call")
+                            raise RuntimeError(
+                                "Detected past policy date without 'always' flag; skipping function_call"
+                            )
                         if parsed < now and chosen_always:
                             parsed = next_9am(now + timedelta(days=1))
                             chosen_date = parsed.isoformat()
@@ -593,7 +682,11 @@ class RagService:
                 pass
 
         # If the model declined despite having sources, provide a minimal helpful answer
-        if isinstance(response, str) and response.strip().startswith("정보를 찾을 수 없습니다") and sources:
+        if (
+            isinstance(response, str)
+            and response.strip().startswith("정보를 찾을 수 없습니다")
+            and sources
+        ):
             minimal = "질문과 관련된 정책 정보를 일부 확인했습니다. 다만 문서에 정확한 표현이 없거나 확인이 더 필요합니다. 아래 참고 정책을 확인해 주세요."
             return {
                 "answer": minimal,
@@ -624,7 +717,10 @@ class RagService:
         return sections, context_text
 
     def _build_prompt(
-        self, question: str, context_text: str, conversation_history: Optional[List[dict]] = None
+        self,
+        question: str,
+        context_text: str,
+        conversation_history: Optional[List[dict]] = None,
     ) -> List[dict]:
         """
         Build the prompt with system message, conversation history, and current question.
@@ -635,10 +731,7 @@ class RagService:
         # Add conversation history if provided
         if conversation_history:
             for msg in conversation_history:
-                messages.append({
-                    "role": msg["role"],
-                    "content": msg["content"]
-                })
+                messages.append({"role": msg["role"], "content": msg["content"]})
 
         # Add current question with context
         user_message = (

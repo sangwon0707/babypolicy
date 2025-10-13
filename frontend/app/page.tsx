@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MessageSquare, Users, Sparkles, Baby } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import HomeBanner from "@/components/HomeBanner";
+import HomeAdvertisement from "@/components/HomeAdvertisement";
 import { communityApi } from "@/lib/api";
 
 export default function Home() {
@@ -44,7 +45,7 @@ export default function Home() {
 
                 {/* Title */}
                 <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
-                  BabyPolicy
+                  MomsGuide
                 </h1>
 
                 {/* Subtitle */}
@@ -178,6 +179,11 @@ export default function Home() {
                     })}
                   </div>
                 )}
+              </div>
+
+              {/* Advertisement Section */}
+              <div className="px-6 mb-8">
+                <HomeAdvertisement />
               </div>
 
               {/* Bottom Padding */}

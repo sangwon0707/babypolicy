@@ -204,6 +204,7 @@ export default function ChatPage() {
 
   const handleExecuteFunction = async (messageId: string, functionName: string, args: any) => {
     setExecutingFunction(messageId);
+    console.log("Executing function:", functionName, "with args:", args);
     try {
       if (!token) {
         throw new Error("로그인이 필요합니다.");
@@ -220,6 +221,7 @@ export default function ChatPage() {
 
       setMessages((prev) => [...prev, successMessage]);
     } catch (error: any) {
+      console.error("Failed to execute function:", error);
       const errorMessage: Message = {
         id: Date.now().toString() + "-error",
         role: "assistant",
