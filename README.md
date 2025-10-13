@@ -1,4 +1,4 @@
-# 🍼 BabyPolicy - AI육아정책 도우미
+# 🍼 MomsGuide (맘스가이드) - AI육아정책 도우미
 
 > 육아 정책을 쉽고 빠르게 찾아주는 AI 챗봇 서비스
 
@@ -25,14 +25,27 @@
   - 🧠 컨텍스트 인식 답변 (최근 10개 메시지 기반)
   - 📝 웰컴 스크린 및 예시 질문 카드
   - 🗑️ 대화 삭제 기능
+  - 📅 **OpenAI Function Calling** - 캘린더 일정 자동 추가 제안
 - 👨‍👩‍👧‍👦 **커뮤니티** - 육아 경험 공유 및 소통
   - ✍️ 글쓰기 (카테고리별 게시글 작성)
   - 📖 게시글 상세 보기 (조회수, 좋아요, 댓글)
   - 💬 댓글 작성 및 실시간 표시
   - 👤 작성자 이름 표시
+  - 🔥 인기 게시글 홈화면 표시
+- 📊 **마이페이지 대시보드** - 정책 관리 및 통계 확인
+  - 🎯 관심 정책 (12개) - 카테고리별 필터링
+  - ✅ 신청 완료 정책 (3개) - 상태 추적 (승인/검토중/추가서류필요)
+  - ⏰ 다가오는 마감일 (2개) - D-day 카운터 및 긴급도 표시
+  - 💬 AI 상담 횟수 (64회)
+  - 📅 캘린더 - 정책 관련 일정 관리
+- 🏠 **홈화면**
+  - 🎪 **정책 배너 캐러셀** - 주요 육아 정책 자동 슬라이드 (5초 간격)
+  - 🛍️ **광고 섹션** - 육아 용품 추천 (자동 슬라이드, 4초 간격)
+  - 🔥 **커뮤니티 인기글** - 최신 인기 게시글 2개 미리보기
 - 📋 **정책 검색** - 지역, 소득, 가족 구성별 맞춤 정책
 - 💬 **실시간 대화** - 자연어로 편하게 질문
 - 🎨 **Baby-Friendly UI** - 귀엽고 편안한 모바일 최적화 디자인
+- 🎭 **Mock Data Demo** - MVP 시연용 샘플 데이터 제공
 
 ---
 
@@ -317,10 +330,29 @@ npm run dev
 #### **메인 페이지 (첫 화면)**
 - **파일**: `frontend/app/page.tsx`
 - **수정하면 바뀌는 것**:
-  - 로고, 제목, 설명 문구
+  - 로고 (MomsGuide), 제목, 설명 문구
   - 로그인/회원가입 버튼 디자인
   - 배경 색상, 애니메이션
   - 로그인 전/후 보이는 내용
+  - 정책 배너 캐러셀 (HomeBanner)
+  - 광고 섹션 (HomeAdvertisement)
+  - 커뮤니티 인기글 미리보기 (2개)
+
+#### **홈 배너 캐러셀**
+- **파일**: `frontend/components/HomeBanner.tsx`
+- **수정하면 바뀌는 것**:
+  - 배너 슬라이드 내용 (5개 주요 정책)
+  - 자동 슬라이드 간격 (기본 5초)
+  - 터치 스와이프 동작
+  - 배너 이미지 및 그라데이션 배경
+
+#### **광고 캐러셀**
+- **파일**: `frontend/components/HomeAdvertisement.tsx`
+- **수정하면 바뀌는 것**:
+  - 광고 상품 목록 (4개 육아 용품)
+  - 자동 슬라이드 간격 (기본 4초)
+  - 할인율, 가격, 리뷰 정보
+  - 상품 이미지 경로
 
 #### **로그인 페이지**
 - **파일**: `frontend/app/(auth)/login/page.tsx`
@@ -360,8 +392,37 @@ npm run dev
 - **수정하면 바뀌는 것**:
   - 프로필 정보 표시
   - 로그아웃 버튼 위치
-  - 설정 메뉴 항목
-  - 내가 쓴 글, 관심 정책 링크
+  - 대시보드 통계 (관심 정책 12개, 신청 완료 3개, 마감일 2개, AI 상담 64회)
+  - 클릭 가능한 통계 카드 (각 상세 페이지로 이동)
+  - Mock 데이터 설정
+
+#### **관심 정책 페이지**
+- **파일**: `frontend/app/me/interest-policies/page.tsx`
+- **수정하면 바뀌는 것**:
+  - 관심 정책 목록 (12개 mock 데이터)
+  - 카테고리 필터 (전체/출산/양육/임신 등 10개)
+  - 정책 카드 디자인 (제목, 금액, 마감일)
+
+#### **신청 완료 정책 페이지**
+- **파일**: `frontend/app/me/applied-policies/page.tsx`
+- **수정하면 바뀌는 것**:
+  - 신청한 정책 목록 (3개 mock 데이터)
+  - 상태 배지 (승인/검토중/추가서류필요)
+  - 신청일, 금액 표시
+
+#### **다가오는 마감일 페이지**
+- **파일**: `frontend/app/me/upcoming-deadlines/page.tsx`
+- **수정하면 바뀌는 것**:
+  - 마감 예정 정책 목록 (2개 mock 데이터)
+  - D-day 카운터 표시
+  - 긴급도별 색상 코드 (7일 이내 빨강, 14일 이내 주황, 그 외 노랑)
+
+#### **캘린더 페이지**
+- **파일**: `frontend/app/me/calendar/page.tsx`
+- **수정하면 바뀌는 것**:
+  - 정책 관련 일정 표시
+  - 월간/주간 뷰
+  - 일정 추가/수정/삭제
 
 #### **하단 네비게이션 바**
 - **파일**: `frontend/components/BottomNav.tsx`
@@ -417,6 +478,9 @@ npm run dev
   - 대화 메시지 조회 (GET /api/conversations/{id}/messages)
   - 대화 삭제 (DELETE /api/conversations/{id})
   - 컨텍스트 히스토리 전달 (최근 10개 메시지)
+  - **OpenAI Function Calling** - 캘린더 일정 추가 제안 (`add_calendar_event`)
+  - 함수 실행 엔드포인트 (POST /api/chat/execute-function)
+  - **버그 수정**: function_call null 체크 추가 (TypeError 방지)
 
 #### **커뮤니티 게시글**
 - **파일**: `backend/routers/community.py`
@@ -524,6 +588,8 @@ npm run dev
 - **파일**: `frontend/.env.local`
 - **수정하면 바뀌는 것**:
   - 백엔드 API 서버 주소
+  - 로컬 개발: `http://localhost:8000/api`
+  - 네트워크 테스트: `http://[로컬IP]:8000/api`
 
 #### **Python 라이브러리 목록**
 - **파일**: `backend/requirements.txt`
@@ -704,15 +770,27 @@ babypolicy/
     ├── package.json            # Node dependencies
     ├── app/
     │   ├── layout.tsx         # Root layout with AuthProvider
-    │   ├── page.tsx           # Home page (auth-aware)
+    │   ├── page.tsx           # Home page (auth-aware, banners, ads, popular posts)
     │   ├── (auth)/
     │   │   ├── login/         # Login page
     │   │   └── register/      # Registration page
-    │   ├── chat/page.tsx      # AI chatbot interface
+    │   ├── chat/page.tsx      # AI chatbot interface (function calling)
     │   ├── community/         # Community pages
-    │   └── me/page.tsx        # User profile page
+    │   │   ├── page.tsx      # Post list with category filter
+    │   │   ├── create/       # Create new post
+    │   │   └── [post_id]/    # Post detail with comments
+    │   └── me/               # User dashboard
+    │       ├── page.tsx      # Dashboard stats (mock data)
+    │       ├── calendar/     # Calendar events
+    │       ├── interest-policies/     # 12 interested policies
+    │       ├── applied-policies/      # 3 applied policies
+    │       ├── upcoming-deadlines/    # 2 upcoming deadlines
+    │       ├── saved-policies/        # Saved policies
+    │       └── edit-profile/          # Edit profile
     ├── components/
     │   ├── BottomNav.tsx      # Bottom navigation (auth-aware)
+    │   ├── HomeBanner.tsx     # Policy banner carousel (5 slides, 5s)
+    │   ├── HomeAdvertisement.tsx  # Product ad carousel (4 items, 4s)
     │   └── ui/                # shadcn/ui components
     ├── contexts/
     │   └── AuthContext.tsx    # Global authentication state
@@ -760,7 +838,8 @@ babypolicy/
 - `GET /auth/me` - Get current user (requires authentication)
 
 ### Chat (`/api/chat`)
-- `POST /chat` - Send message to AI chatbot (RAG-powered, context-aware)
+- `POST /chat` - Send message to AI chatbot (RAG-powered, context-aware, function calling)
+- `POST /chat/execute-function` - Execute approved function (e.g., add_calendar_event)
 - `GET /conversations` - Get user's conversation list
 - `GET /conversations/{id}/messages` - Get messages from a conversation
 - `DELETE /conversations/{id}` - Delete a conversation (cascade deletes messages)
@@ -864,4 +943,39 @@ For issues or questions:
 
 ---
 
-**Made with 🍼 by BabyPolicy Team**
+## 🆕 Recent Updates
+
+### v0.5.0 (2025-10-13)
+- ✨ **Brand Update**: Renamed from BabyPolicy to MomsGuide (맘스가이드)
+- 🏠 **Home Screen Enhancement**:
+  - Added policy banner carousel (5 major policies, auto-slide 5s)
+  - Added product advertisement carousel (4 items, auto-slide 4s)
+  - Added popular community posts preview (top 2 posts)
+- 📊 **Dashboard Pages**:
+  - Interest Policies page (12 mock policies with category filter)
+  - Applied Policies page (3 policies with status tracking)
+  - Upcoming Deadlines page (2 deadlines with D-day counter)
+  - Mock data for MVP demonstration
+- 📅 **OpenAI Function Calling**:
+  - AI can now suggest adding calendar events
+  - User approval flow for function execution
+  - Automatic calendar event creation
+- 🐛 **Bug Fixes**:
+  - Fixed TypeError in chat.py (function_call null check)
+  - Fixed advertisement image loading (renamed to English)
+  - Improved error handling for function calling
+- 🎨 **UI Improvements**:
+  - Clickable dashboard stat cards
+  - Color-coded urgency indicators
+  - Status badges for applied policies
+  - Touch swipe support for mobile carousels
+
+### v0.4.0 (Previous)
+- 👨‍👩‍👧‍👦 Community feature with categories, likes, comments
+- 💬 Context-aware chatbot with conversation history
+- 🗑️ Conversation deletion feature
+- 🔥 Popular posts display
+
+---
+
+**Made with 🍼 by MomsGuide Team**
